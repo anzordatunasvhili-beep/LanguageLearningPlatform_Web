@@ -1,0 +1,7 @@
+node_modules
+dist
+.tools
+.local
+package-lock.json
+supabase/migrations
+supabase/seed.sql

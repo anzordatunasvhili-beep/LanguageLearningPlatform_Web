@@ -1,0 +1,31 @@
+import { Link, Outlet } from 'react-router';
+import { Icon } from '../components/ui/index.jsx';
+
+export default function PublicLayout() {
+  return (
+    <div className="public-shell">
+      <header className="public-header">
+        <Link className="brand" to="/">
+          <span className="brand-mark">k</span>kotoba<span className="brand-dot">.</span>
+        </Link>
+        <nav aria-label="Public navigation">
+          <Link to="/games">Play & learn</Link>
+          <Link to="/opportunities">Explore the world</Link>
+          <Link className="button button-secondary" to="/auth/login">
+            Sign in <Icon name="arrow_forward" />
+          </Link>
+        </nav>
+      </header>
+      <main id="main-content">
+        <Outlet />
+      </main>
+      <footer className="public-footer">
+        <Link className="brand" to="/">
+          kotoba.
+        </Link>
+        <span>A little practice. A bigger world.</span>
+        <span>Foundation preview · 2026</span>
+      </footer>
+    </div>
+  );
+}
