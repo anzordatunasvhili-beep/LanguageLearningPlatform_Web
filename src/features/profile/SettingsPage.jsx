@@ -186,14 +186,18 @@ export default function SettingsPage() {
         description="Your profile and preferences are saved securely across devices."
       />
       <ResourceState resource={resource}>
-        {({ player, languages }) => profile ? (
-          <SettingsForm
-            initial={player.settings}
-            profile={profile}
-            languages={languages}
-            refreshProfile={refreshProfile}
-          />
-        ) : <p role="alert">Your profile could not be loaded. Please sign in again.</p>}
+        {({ player, languages }) =>
+          profile ? (
+            <SettingsForm
+              initial={player.settings}
+              profile={profile}
+              languages={languages}
+              refreshProfile={refreshProfile}
+            />
+          ) : (
+            <p role="alert">Your profile could not be loaded. Please sign in again.</p>
+          )
+        }
       </ResourceState>
     </div>
   );

@@ -1,68 +1,58 @@
-# Portable contracts and future integration
+# Platform contracts
+
+## Trusted practice
+
+The browser calls `platform_action(p_action, p_payload)` using its authenticated session. The function derives the user from `auth.uid()`; client-supplied scores, XP, ownership, and role grants are never accepted.
+
+- `start_practice`: accepts `lessonId` and optional `releaseId`. Validates publication ancestry and game eligibility. Snapshots exercises and private solutions; returns public questions and a server-issued run ID.
+- `answer`: accepts `runId`, `exerciseId`, and a text/array answer. Validates ownership and checks the private solution. The first submitted answer is final; retries return the same feedback.
+- `finish_practice`: requires every exercise answered. Saves accuracy and attempts atomically, applies rewards and achievements/quests, and returns the stored result on retries.
+
+A lesson completes at 80% accuracy and grants its XP once. Games save verified scores based on correct answers and grant XP once per release per UTC day. Completing a review still records activity without duplicating XP. Streaks use the learner's saved timezone; daily minutes use elapsed server time capped at 60 minutes per completed run. Runs expire after 24 hours and starts are capped at 100 per rolling day.
+
+The built-in renderer supports choice, typing, and word order, with aliases for translation/fill-blank/grammar-choice/true-false/sentence-builder. These aliases use the same corresponding answer interaction. Unsupported exercises prevent a session from starting.
+
+The browser games currently share the practice challenge engine. Independent game executables, multiplayer verification, and a Godot protocol remain future work.
 
 ## Avatar definition v1
-
-The avatar is a player resource, independent of the user's auth credentials and public portrait. The preview uses a small local asset catalog; production writes must resolve permitted catalog versions and owned/free cosmetics in Postgres.
 
 ```json
 {
   "schemaVersion": 1,
-  "avatarId": "local-explorer",
+  "avatarId": "owner-avatar-uuid",
   "modelFamily": "humanoid-v1",
   "selections": [
-    { "slot": "body", "assetKey": "body.traveler", "assetVersion": 1, "options": { "tint": "#deb99e" } },
-    { "slot": "hair", "assetKey": "hair.soft-bob", "assetVersion": 1, "options": { "tint": "#343735" } },
-    { "slot": "top", "assetKey": "top.academy-jacket", "assetVersion": 1, "options": { "tint": "#747e69" } }
+    {"slot":"body","assetKey":"body.traveler","assetVersion":1,"options":{"tint":"#deb99e"}},
+    {"slot":"hair","assetKey":"hair.soft-bob","assetVersion":1,"options":{"tint":"#343735"}},
+    {"slot":"top","assetKey":"top.academy-jacket","assetVersion":1,"options":{"tint":"#747e69"}}
   ]
 }
 ```
 
-`src/services/avatarService.js` validates the limited preview schema and exports only allowlisted fields. This uses the same portable `assetKey`, `assetVersion`, and `options.tint` contract as [DATABASE.md](DATABASE.md#portable-avatar-contract). The preview supports three required slots and a limited tint palette; the database can support additional catalog slots and optional six-digit hex tints. The local `avatarId` is an honest preview identifier; production uses a player-owned UUID. Asset keys and versions resolve to the immutable catalog revisions in the migrations. Do not upload this sample JSON as an unchecked database row. Add an explicit resolution layer that validates ownership and compatibility and returns each client's manifest. UI appearance controls map skin to `body` and clothing to `top`; renderer props remain independent of the portable slots.
+`avatarRepository` loads the published catalog, entitlements, primary avatar, and equipment. `save_avatar` resolves stable keys/version numbers and checks ownership, free/unlocked status, model compatibility, slot compatibility, and appearance options in one transaction. It returns the persistent avatar UUID. A draft starts with built-in colors; it becomes account data only on successful save.
 
-TODO: Godot and mobile resolve the same stable asset identity to their own resource paths. Add schema migrations, platform compatibility/version negotiation, inventory, body families, modular clothing, proportions/morph limits, and optional renderer-specific fallbacks. Never put a React component name or Three.js object into the portable definition. Signing in does not make client-supplied cosmetic ownership trustworthy.
+The web renderer currently supports the built-in body/hair/top styles and tint palette. Database catalog support is broader than the renderer; uploading another manifest does not automatically provide a new visual implementation. Production models, animations, Godot/native manifest resolution and expanded inventory UI remain future work.
 
-## Character presentation
+## AI conversations
 
-`CharacterRenderer({ mode, appearance, name, emotion })` is the current rendering seam. `mode='2d'` renders a code-native placeholder portrait; `mode='3d'` lazy-loads the Three.js scene. The avatar and character conversation pages consume the same interface. The normal app does not import Three.js eagerly.
+`open_conversation(p_scenario, p_new)` resumes or creates an owned session for a published character/scenario. Message history is readable only by the session owner.
 
-Future presentation states are allowlisted enums, such as `emotion: neutral|happy|thinking`, `pose: relaxed|arms_crossed`, `animation: idle_neutral|talking_01`, `camera: medium_closeup`. A provider response must be validated and mapped to a supported state; it cannot supply model URLs or arbitrary animation code. TODO: model loader/cache, rig adapter, lighting/camera presets, clip transitions, facial animation, TTS/lip sync. Provide graceful WebGL and missing-asset fallback.
+The browser invokes `ai-conversation` with `{sessionId, requestId, message}`. The Edge Function validates the access token with Supabase Auth, then calls the service-only reservation function. Reservations enforce ownership, one pending request, a rolling daily quota, and idempotency before billing. Only the service can commit a provider response. Committing both messages and one affinity increment is atomic; retries do not repeat either.
 
-## Conversation service
+Provider/model/keys are server secrets. OpenAI uses Responses with `store:false`; Gemini uses generateContent. Text is rendered as text, never executable HTML. Replies are not assessments and do not award XP. See [Live setup](LIVE_SETUP.md) for context limits, retention behavior and deployment.
 
-The current `aiService.respond({ characterId, turn, message })` returns `{ text, translation, options, emotion, provider }` from a fixed local script. The UI labels this limitation, and the service accepts no API key. Conversation state is bounded to one current line and one previous reply.
+## Workbooks
 
-TODO: replace with an authenticated backend adapter using durable session IDs, language/goal/scenario configuration, bounded memory summaries, moderation and retention policy, prompt-injection-resistant structured output validation, provider timeouts, rate limits, and controlled token budgets. Relationship changes require a trusted transaction. Never return provider secrets or internal prompts to the client. Store transcript objects privately; generated/context history cannot grow indefinitely in frontend state.
+`generate_material` accepts a published template UUID. It selects published exercises at that template's language/CEFR level, includes the private solutions intentionally in the owner's offline answer sheet, and saves a ready material referencing that template version. Limit: 20 per rolling day, up to 50 questions per workbook. Fewer questions are used when the catalog has fewer matching exercises.
 
-## Game result submission
+The current document renderer displays practice and an answer sheet. Template sections are retained as metadata; arbitrary theory/examples sections are not synthesized. Browser print supplies **Save as PDF** with Unicode-capable fonts. There is no background AI generation job or stored binary PDF yet.
 
-Games are clients of the platform. Future request shape:
+## Community and publishing
 
-```json
-{
-  "schemaVersion": 1,
-  "sessionId": "server-issued-session-uuid",
-  "releaseId": "catalog-release-uuid",
-  "idempotencyKey": "unique-submission-uuid",
-  "result": { "score": 120, "correct": 8, "attempted": 10, "durationMs": 60000 }
-}
-```
+Room membership/capacity and assessed CEFR requirements are checked by trusted functions. Chat reads/sends require current membership; messages are bounded and sending is rate-limited. Text updates poll every eight seconds. Voice/event room integrations remain unavailable.
 
-Do not accept authoritative XP, unlocks, server timestamps, or arbitrary user IDs. The backend identifies the user from the access token, verifies the session/release, validates bounded evidence and eligibility, detects replays, then atomically writes a verified session, a deduplicated progression event, and aggregates. TODO: abuse controls, per-game validation, Godot PKCE/deep links, app/device compatibility, offline submissions and reconciliation. No networking endpoint or fake downloadable game is implemented yet.
+Rankings aggregate actual progression events and expose only opted-in public profile names/usernames and XP. They never expose account emails or private progress tables.
 
-## Exercise engine
+Opportunities read only published non-demo records. External application links require HTTPS. The platform does not transact bookings or payments.
 
-Exercises are data addressed by stable IDs and types. `ExerciseRenderer` currently supports `multiple_choice`, `typing`, and `word_order`; unknown types produce a clear unavailable state. Local grading only supports formative sample practice. Answer keys in fixtures are intentionally visible and cannot secure rewards.
-
-TODO: add a server grading boundary with published content versions and private answer keys; validate attempt ownership, content ancestry and request bounds. Extend the renderer registry with matching, fill-blank, listening, speaking, image-choice and boss-test components as their actual learning behavior is defined. Do not make client-only tests competitive.
-
-## PDF generation
-
-Admin templates constrain language, level, sections, exercise types, question counts, instructions and answer behavior. Current UI edits an in-memory sample and previews its structure. It does not generate or download a PDF.
-
-The SQL foundation already enforces immutable published template revisions. TODO: connect the editor and publishing workflow to those revisions, add a validated generation request, queued server jobs, provider output schema validation, pedagogical review, deterministic PDF rendering, job failure/retry states, private storage, short-lived signed downloads and retention/deletion. Generated material metadata must reference the exact template version. Payment or quota enforcement belongs on the backend.
-
-## Public discovery, rooms, and rankings
-
-Opportunity samples are fictional and marked as such. TODO: verified sources, currency/date/availability freshness, eligibility semantics and moderation before real catalog launch. Tours booking/payment is a separate future project.
-
-Rooms browse only. TODO: trusted language-level entry checks, membership lifecycle, moderation, realtime authorization, voice/streaming safety and privacy. Rankings currently contain sample players; future public ranking projections should expose only opted-in profile fields and verified metrics. Private account progress should not become publicly readable just to support a leaderboard.
+Catalog edits use RLS admin policies. Exercises and private solutions are edited atomically by an admin-only RPC. Published asset/template versions are immutable; editors create a new draft version. Admins can inspect a bounded learner overview but cannot grant roles or alter authoritative progress from the browser.

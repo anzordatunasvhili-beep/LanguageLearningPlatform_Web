@@ -1,8 +1,8 @@
-# Database foundation
+# Database
 
-The first foundation contains **40 application tables**: 37 in `public`, three in the unexposed `private` schema. Supabase owns `auth.users` and the Storage tables. This schema supports the first website and preserves the boundary between an authentication account, a social profile, a portable avatar, language progress, game results, and character relationships.
+The current schema contains **44 application tables**: 39 in `public`, five in the unexposed `private` schema. Supabase owns `auth.users` and the Storage tables. Authentication accounts, social profiles, portable avatars, learning progress, game results, and character relationships remain separate.
 
-The frontend currently uses mock services for learning completion, scores, rewards, AI, PDFs, and community participation. The presence of a table does not imply that its trusted server workflow already exists. In particular, there is intentionally no browser-callable function that awards XP or accepts an arbitrary game score.
+The frontend uses Supabase queries and trusted RPCs for the implemented workflows. Clients submit answers rather than scores or XP. The two migrations dated 20260929 add practice/reward transactions, avatar saving, rankings, text chat, workbook generation, admin answer editing, and private AI conversations. See [Live setup](LIVE_SETUP.md) for existing-project SQL Editor instructions and [Contracts](CONTRACTS.md) for the enforced limits.
 
 ## Files and local commands
 
@@ -15,6 +15,8 @@ All files in this foundation are **CREATE** additions:
 | `supabase/migrations/20260928000200_progression_platform.sql` | Shared progression and remaining platform domains |
 | `supabase/migrations/20260928000300_security_storage.sql` | Grants, RLS, immutable versions, safe role lookup and buckets |
 | `supabase/migrations/20260928000400_bootstrap_audit.sql` | Signup defaults, timestamps and privileged-change auditing |
+| `supabase/migrations/20260929000100_live_platform.sql` | Live practice, rewards, avatar persistence, rankings, rooms, workbooks and admin RPC |
+| `supabase/migrations/20260929000200_live_conversations.sql` | Private messages, session creation and service-only AI request transactions |
 | `supabase/seed.sql` | Development catalog content with stable IDs |
 | `supabase/tests/database/security.test.sql` | Transactional pgTAP security regression tests |
 | `supabase/tests/pglite-smoke.mjs` | Optional local SQL smoke runner with explicit Auth/Storage test doubles |
@@ -40,7 +42,7 @@ npx supabase db push
 
 Do not include `--include-seed` for a production deployment. Configure hosted Auth site URLs, redirect allowlists, email delivery, and Google OAuth credentials in the selected Supabase project. Local `config.toml` does not automatically configure the hosted project.
 
-**Verification status:** all four migrations executed successfully in PGlite, the development seed executed twice without errors, and **46 SQL security smoke assertions passed**. That runner uses PostgreSQL with explicit substitutes for Supabase Auth/Storage schemas and the pgTAP assertion functions; it exercises the actual migrations, grants, triggers and test SQL. It does not verify Supabase's complete schemas, Storage HTTP service, Auth HTTP service, PostgREST or the pgTAP extension. Independent static review also covered publication ancestry and owner-write boundaries. Docker/Supabase/PostgreSQL server tooling is unavailable here, so the native `supabase test db` and `supabase db lint` commands still need to run before production use.
+**Verification status:** all six migrations executed successfully in PGlite, the development seed executed twice, and **100 SQL assertions passed**. This runner uses explicit Auth/Storage and assertion-function substitutes; it does not verify native Supabase HTTP services or pgTAP. Native `supabase test db` and `supabase db lint` still require Supabase CLI/Docker. See [verification](VERIFICATION.md).
 
 To repeat the optional smoke test without adding a dependency to the application:
 
@@ -64,7 +66,8 @@ The temporary package lives under the ignored `.tools/` directory. This smoke ru
 | Games (3) | `games`, `game_releases`, `game_sessions` | A game has platform/version releases; sessions reference the exact release and carry a verification status and idempotency key. |
 | Characters (4) | `ai_characters`, `ai_scenarios`, `conversation_sessions`, `character_relationships` | Characters are persistent NPCs. Scenarios belong to characters; private sessions and relationship state belong to the learner. |
 | Materials (2) | `pdf_templates`, `generated_materials` | Immutable template revisions contain constrained section definitions. Generated output records the exact template revision, structured content and private object path. |
-| Discovery and operations (6) | `opportunities`, `rooms`, `room_members`, `notifications`, `moderation_reports`, `private.audit_log` | Common opportunity filters are relational. Type-specific tour details are bounded JSON. Rooms are browse-only until trusted membership validation is implemented. |
+| Discovery and operations (6) | `opportunities`, `rooms`, `room_members`, `notifications`, `moderation_reports`, `private.audit_log` | Common opportunity filters are relational. Type-specific tour details are bounded JSON. Room membership is managed through trusted RPCs. |
+| Live workflow additions (4) | `private.practice_runs`, `room_messages`, `conversation_messages`, `private.ai_requests` | Snapshot grading, persistent chat, private history and idempotent provider request reservations. |
 
 UUID keys, foreign keys, unique slugs, ordered-sibling constraints, timestamps, bounded numeric checks and FK/query indexes are included. Published referenced catalog rows should be archived. Restrictive FKs protect attempt/session history; account removal cascades through the player's private data. Audit actor references are set to null when an account is removed.
 
@@ -112,21 +115,21 @@ Never put this operation in frontend code, development seed data, or a public RP
 | Reports | None | Submit own, read own | Admin/moderator read all, update only status | Full |
 | Private roles, solutions and audit | None | No table access | No browser table access | Full |
 
-`SELECT`, `INSERT`, `UPDATE` and `DELETE` grants are independent of RLS. Owner-update policies use both `USING` and `WITH CHECK`; column grants prevent modification of ownership and trusted fields. All 40 application tables enable RLS. Private tables are excluded from the Data API and have no browser grants or table policies.
+`SELECT`, `INSERT`, `UPDATE` and `DELETE` grants are independent of RLS. Owner-update policies use both `USING` and `WITH CHECK`; column grants prevent modification of ownership and trusted fields. All 44 application tables enable RLS. Private tables are excluded from the Data API and have no browser grants or table policies.
 
 Private authorization helpers use `SECURITY DEFINER` only when necessary to read the inaccessible role table; the signup/audit trigger functions use it for their specific server-owned writes. Each has `search_path = ''`, qualified object references, no arbitrary target-user parameter and revoked default execution. Trigger functions are not callable as normal RPCs. Ordinary helper functions and the public role wrapper use `SECURITY INVOKER`.
 
-Catalog writes, role changes and report moderation record minimal audit entries. They do not copy raw report reasons, generated content or user conversations. Private answer authoring currently requires a trusted operator; a future admin authoring endpoint must coordinate exercise and answer updates without exposing solutions through a public table.
+Catalog writes, role changes and report moderation record minimal audit entries. They do not copy raw report reasons, generated content or user conversations. The admin-only `save_exercise` action saves an exercise and its private solution atomically. The `exercise_solution` action is also admin-only.
 
 ## Trusted progression and leaderboards
 
 An authenticated client proves which account is submitting data; it does **not** prove that a score or learning answer is valid. Browser, Android, React Native and Godot clients all remain untrusted for awards.
 
-The future submission service must validate JWTs, verify the exercise/game rules and supported content version, enforce replay/idempotency limits, determine rewards itself, and write a session, progression event, aggregate updates and rewards in one transaction. Streak evaluation uses trusted activity and a controlled timezone policy. Changing a preference must not retroactively manufacture streak days. Enrollments and proficiency changes also require this service; no direct browser insert can invent an assessed CEFR level.
+The practice RPC validates ownership, published hierarchy and bounded requests, snapshots private solutions, checks answers and atomically saves results/rewards. Streak evaluation uses the saved timezone and completed activity. CEFR assessment remains separate: no direct browser insert can invent an assessed level.
 
 `progress_events` rejects direct updates/deletes; corrections use compensating events. Account-deletion cascades are permitted. Its unique `(user_id, source_kind, source_key)` key is one part of replay prevention, not a complete validation system. `game_sessions` similarly deduplicates `(user_id, release_id, submission_key)`.
 
-No live leaderboard view is exposed yet. The current leaderboard is a labeled mock. A future server-built projection must include only verified activity and deliberately selected public fields for users who opted in. Weekly/monthly windows, language/game filters and skill calculations derive from trusted events and sessions. Do not create a default owner-privileged view over private progress and assume table RLS automatically protects it.
+The `leaderboard` RPC returns only public opted-in profile names/usernames and summed XP from trusted events. It supports weekly/all-time windows and optional language filtering, capped at 100 rows. Private progress remains inaccessible to other learners.
 
 ## Portable avatar contract
 
@@ -184,12 +187,12 @@ The seed creates metadata only; it does not upload images, models or PDFs. Bucke
 | `70000000-0000-4000-8000-000000000001` | Japanese greetings PDF template |
 | `80000000-0000-4000-8000-000000000003` | Fictional Madrid language tour |
 
-Seed inserts are repeatable by stable ID using `ON CONFLICT DO NOTHING`; they do not overwrite published revisions or existing editorial content. All opportunity rows set `is_demo = true`. Game releases have no real download URL and `launchEnabled = false`. AI scenario metadata explicitly identifies a mock provider. There are no fake learner histories, passwords or privileged accounts in seed data.
+Seed inserts are repeatable by stable ID using `ON CONFLICT DO NOTHING`; they do not overwrite published revisions or existing editorial content. All opportunity rows set `is_demo = true` and are hidden from normal catalog reads. The original preview game releases remain alongside version 1.0 browser challenge releases. No external download is invented. Provider settings come exclusively from Edge secrets; old scenario metadata does not select an AI provider. There are no fake learner histories, passwords or privileged accounts in seed data.
 
 ## Later migration boundaries
 
-Keep these deferred until their first working service exists: exercise-attempt answer records and grading endpoint; immutable published course snapshots; multilingual game compatibility joins; bounded AI message/memory retention; PDF worker jobs; room eligibility/capacity enforcement; ranked public leaderboard snapshots; friends/social graphs; platform flags/settings UI; tours inventory/booking/payments; external-game attestation; mobile/Godot authentication flows; and RPG world state. An account level can initially be calculated from XP with a versioned rule rather than stored as another inconsistent counter.
+Remaining domains include multilingual standalone-game compatibility, scheduled retention jobs, binary PDF workers/storage, friends/social graphs, tours inventory/booking/payments, external-game attestation, native authentication flows and RPG world state. Account level is calculated as 1 + floor(total XP / 1000); it is not a proficiency assessment.
 
-Current `lesson_attempts.content_version` records a revision label but does not itself preserve historical exercise snapshots. Before live grading, publish immutable lesson snapshots and grade against the attempt's snapshot. The current seed content is for the mock experience, so no live score currently relies on mutable lesson content.
+Each private practice run now snapshots the public exercises and private solutions at start. Editing a published exercise does not change grading for a run already in progress. Development seed content should still be reviewed/replaced through admin before a public launch.
 
 Official references: [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [database functions](https://supabase.com/docs/guides/database/functions), [private security helpers](https://supabase.com/docs/guides/troubleshooting/do-i-need-to-expose-security-definer-functions-in-row-level-security-policies-iI0uOw), [views](https://supabase.com/docs/guides/database/views), [Storage bucket access](https://supabase.com/docs/guides/storage/buckets/fundamentals), [database testing](https://supabase.com/docs/guides/database/testing), [seed configuration](https://supabase.com/docs/guides/local-development/seeding-your-database).

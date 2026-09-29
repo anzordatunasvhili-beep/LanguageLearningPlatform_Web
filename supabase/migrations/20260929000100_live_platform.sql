@@ -137,7 +137,7 @@ declare
   uid uuid := auth.uid(); run private.practice_runs; lesson record; question jsonb; reply jsonb; result jsonb;
   questions jsonb; responses jsonb; correct boolean; correct_count integer; total integer; accuracy numeric; reward integer := 0;
   extra integer := 0; duration integer; lang uuid; release uuid; room public.rooms; template public.pdf_templates;
-  identity uuid; asset record; choice jsonb; selection_count integer; item record; assessed text; required_rank integer;
+  identity uuid; asset record; choice jsonb; selection_count integer; item record; assessed text; required_rank integer; activity_recorded boolean := false;
 begin
   if uid is null then raise exception 'Sign in to continue' using errcode='42501'; end if;
   if args is null or jsonb_typeof(args)<>'object' or octet_length(args::text)>65536 then raise exception 'Invalid request'; end if;
@@ -201,13 +201,17 @@ begin
       insert into public.lesson_progress(user_id,lesson_id,completed_at,best_accuracy,attempts)
         values(uid,run.lesson_id,case when accuracy>=80 then now() end,accuracy,1)
         on conflict(user_id,lesson_id) do update set completed_at=coalesce(public.lesson_progress.completed_at,excluded.completed_at),best_accuracy=greatest(public.lesson_progress.best_accuracy,excluded.best_accuracy),attempts=public.lesson_progress.attempts+1;
-      if accuracy>=80 then reward := private.award_activity(uid,run.language_id,'lesson',run.lesson_id::text,run.reward,least(60,duration/60)); end if;
+      if accuracy>=80 then
+        activity_recorded := not exists(select 1 from public.progress_events where user_id=uid and source_kind='lesson' and source_key=run.lesson_id::text);
+        reward := private.award_activity(uid,run.language_id,'lesson',run.lesson_id::text,run.reward,least(60,duration/60));
+      end if;
     else
       update public.game_sessions g set verification_status='verified',score=correct_count*100,accuracy=round(100.0*correct_count/total,2),playtime_seconds=duration,completed_at=now(),metrics=jsonb_build_object('correct',correct_count,'total',total) where id=run.id;
+      activity_recorded := not exists(select 1 from public.progress_events where user_id=uid and source_kind='game' and source_key=run.release_id||':'||(now() at time zone 'UTC')::date);
       reward := private.award_activity(uid,run.language_id,'game',run.release_id||':'||(now() at time zone 'UTC')::date,floor(run.reward*accuracy/100)::integer,least(60,duration/60));
     end if;
     -- Reviews still count as activity; their zero-XP event cannot duplicate a reward.
-    if reward=0 then
+    if not activity_recorded then
       perform private.award_activity(uid,run.language_id,case when run.release_id is null then 'lesson' else 'game' end,'practice:'||run.id,0,least(60,duration/60));
     end if;
     result := jsonb_build_object('correct',correct_count,'total',total,'accuracy',accuracy,'xp',reward,'score',correct_count*100,'passed',accuracy>=80);

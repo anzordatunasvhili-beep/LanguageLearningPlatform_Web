@@ -1,56 +1,32 @@
-# Foundation verification
-
-Implementation completed from the written visual direction, with the user's confirmation to proceed without a reference image. The empty workspace received new source, configuration, documentation, migration, seed, and test files. No remote deployment or database migration was performed.
-
-## Checks completed
+# Verification — live data update, 29 September 2026
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| Production build | Passed | Vite 7.3.6, 691 transformed modules, route chunks and isolated 3D chunk |
-| JavaScript contract tests | 13 passed | Auth configuration, safe redirects/storage, portable avatar validation/export, exercise grading |
-| SQL migration smoke test | Passed | All four actual migrations executed in PGlite PostgreSQL |
-| Development seed | Passed twice | Repeatable inserts with stable IDs, including both avatar hair choices |
-| SQL security assertions | 46 passed | Actual grants, RLS, ownership, protected progression/roles/answers, avatar entitlement, storage path rules |
-| Desktop browser routes | Passed | 17 catalog/app/admin routes, with no runtime errors or document overflow at 1440px |
-| Mobile browser routes | Passed | Dashboard, learning, characters, conversation, avatar, opportunities, template editor and landing at 390px |
-| Practice flow | Passed | Multiple choice, typing, word order, correct feedback and 3/3 completion |
-| Character scene | Passed | Scripted reply, typed response and translation toggle |
-| Avatar | Passed | Appearance selection, local draft across reload, JSON download and lazy 3D canvas |
-| Opportunities | Passed | Language filter, details dialog, Escape dismissal |
-| Admin template editor | Passed | Name edit, structure preview, local session save |
-| Navigation and guards | Passed | Signed-out redirect, explicit demo entry, mobile menu dismissal, sign-out redirect |
+| Production build | Passed | All React routes and lazy bundles compiled |
+| Node tests | 18 passed | Environment/auth storage, avatar/export, exercise utilities, AI endpoint auth/provider/error/idempotency behavior |
+| SQL smoke suite | 100 passed | All six migrations, seed applied twice, RLS/grants, private grading, rewards/activity deduplication, avatar entitlement, rooms, workbooks, game scores, private AI history and reservations |
+| Browser workflows | Passed | Real application with isolated PGlite; Auth and PostgREST transport are explicit test doubles |
+| Hosted Supabase/AI | Not verified | New migrations are awaiting user execution; Edge Function/provider are not deployed/configured by this update |
 
-Browser verification used installed headless Chrome with Playwright. Screenshots were inspected for composition and mobile layout. Local screenshots are saved under `.local/screenshots/`, which is intentionally ignored. The browser runner is at `tests/browser-smoke.mjs`; temporary test tooling lives under `.tools/qa/`, outside app dependencies.
+Browser verification covered learner and 17 admin catalog routes, lesson completion/rewards, avatar save/reload, settings/privacy/rankings, persisted room chat, workbook generation/print, conversation session creation, honest AI-unconfigured errors, and admin publishing visible in the learner catalog. Desktop 1440px and mobile 390px checks found no page overflow. No browser exceptions or unexpected database errors occurred.
 
-The SQL smoke runner supplies explicit substitutes for Supabase Auth/Storage schemas and pgTAP assertion functions. These checks do **not** establish that native Supabase services are configured correctly. Native CLI migrations, pgTAP, database lint, Auth HTTP, Storage HTTP, and PostgREST still require a Supabase/Docker environment.
+Artifacts are local and ignored: `.local/screenshots/live-dashboard.png`, `live-mobile.png`, and `workbook.pdf`. The tests never log in to a real user account, mutate the hosted database, or call a paid model.
 
-## Repeat the checks
+## Repeat
 
 ```powershell
 npm test
 npm run build
-```
-
-For the optional browser check, use the explicit demo environment from `.env.example`, run `npm run dev` in one terminal, then in another terminal:
-
-```powershell
-npm install --prefix .tools/qa --no-save playwright@1.63.0
+node supabase/tests/pglite-smoke.mjs
 node tests/browser-smoke.mjs
 ```
 
-The script uses Chrome at `C:/Program Files/Google/Chrome/Application/chrome.exe`. Set `KOTOBA_CHROME_PATH` for another installed Chromium executable, and optionally `KOTOBA_TEST_BASE_URL` for a different local port. It creates a fresh, isolated browser session; it never uses the user's Chrome profile. Run against a local **demo** build, not a production account deployment. It generates ignored screenshots and local browser drafts only.
+The SQL smoke runner needs the optional PGlite package under `.tools/db-verify`. The browser harness also needs Playwright under `.tools/qa`, Chrome, and Vite running with live-mode frontend configuration. Set `KOTOBA_TEST_BASE_URL` to the Vite URL (the harness default in this workspace is port 5175). The HTTP adapter implements the queries exercised by these tests; it is not an implementation of PostgREST.
 
-For database checks, use the native and optional smoke commands in [DATABASE.md](DATABASE.md).
+The AI endpoint tests transpile the actual TypeScript handler and supply isolated Auth/RPC/fetch doubles. They verify adapter request/response handling and failure behavior without provider credentials. They do not replace a deployed Deno/Edge test or confirm provider model availability.
 
-## Material limitations
+## Remaining checks
 
-- Live email/password, Google login, email verification, recovery, and role/profile lookup are implemented but have not been tested against a configured Supabase project. No credentials were supplied.
-- Learning content, rewards, quest/streak totals, rankings, game availability, opportunities, character responses, material generation and admin editing remain sample workflows. Auth can be live while these areas still display sample content.
-- Local avatar drafts and preferences do not sync to Supabase. The export format matches the database's documented portable contract, but no cross-client export endpoint is implemented.
-- The 3D scene is a geometric placeholder. Its lazy chunk is about 902 kB minified / 244 kB gzip and causes a Vite size warning. It loads only when the user selects the 3D preview. The ordinary entry chunk is about 508 kB minified / 149 kB gzip; no model or game executable is bundled into it.
-- Browser checks are a smoke test, not a complete accessibility or cross-browser audit. Native dialog behavior, labels, visible focus, closed-menu keyboard exclusion and reduced-motion styles are included. Additional assistive-technology testing belongs in the MVP release gate.
-- Public font/icon resources currently use Google Fonts. Production can self-host licensed font subsets if offline use or a stricter content-security policy requires it.
+Run native `supabase test db` and `supabase db lint --local` with Supabase CLI/Docker. These were unavailable here. Verify hosted email verification/recovery, OAuth configuration, the actual PostgREST relations, both SQL updates, and a configured AI provider on the intended deployment.
 
-## Next implementation boundary
-
-Connect published catalog reads through the existing feature services, then implement immutable assessment content and a trusted grading/progression transaction before awarding real XP. Preserve owner-only private progress and server-owned rewards. Wire avatar/profile persistence and admin publishing to the already-defined grants and policies. Connect real AI and PDF jobs only when explicitly scheduled for the next phase.
+Three.js remains a lazy-loaded ~902 kB minified chunk (~244 kB gzip), causing the existing bundle-size warning. Character visuals remain built-in SVG/geometric representations. Full standalone games, voice/video, bookings/payments, native clients and production avatar asset delivery are not implemented by this update.

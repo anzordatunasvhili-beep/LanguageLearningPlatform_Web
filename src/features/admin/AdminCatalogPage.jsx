@@ -96,6 +96,7 @@ function ContentEditor({ config, row, relations, onSaved }) {
             <label className="inline-check" key={field.key}>
               <input
                 type="checkbox"
+                aria-label={field.label}
                 checked={!!draft[field.key]}
                 disabled={disabled}
                 onChange={(e) => change(field.key, e.target.checked)}
@@ -108,6 +109,7 @@ function ContentEditor({ config, row, relations, onSaved }) {
             {field.label}
             {field.type === 'json' || field.type === 'textarea' ? (
               <textarea
+                aria-label={field.label}
                 rows={field.type === 'json' ? 7 : 4}
                 value={draft[field.key]}
                 disabled={disabled}
@@ -117,6 +119,7 @@ function ContentEditor({ config, row, relations, onSaved }) {
               />
             ) : field.type === 'select' || field.type === 'relation' ? (
               <select
+                aria-label={field.label}
                 value={draft[field.key]}
                 disabled={disabled}
                 required={!field.optional}
@@ -137,6 +140,7 @@ function ContentEditor({ config, row, relations, onSaved }) {
               </select>
             ) : (
               <input
+                aria-label={field.label}
                 type={field.type}
                 value={draft[field.key]}
                 disabled={disabled}

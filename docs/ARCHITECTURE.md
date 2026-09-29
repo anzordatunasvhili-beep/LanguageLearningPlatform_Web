@@ -1,6 +1,6 @@
 # Language-learning platform: foundation plan
 
-Status: first-phase implementation plan, 28 September 2026. Working name: **Kotoba** (replaceable branding).
+Original planning document, 28 September 2026. Updated live implementation status, 29 September: catalogs, practice/grading/progress, profiles/settings, avatar persistence, opt-in rankings, text rooms, workbooks, and admin publishing now use Supabase. AI has a deployable authenticated Edge adapter. See [Contracts](CONTRACTS.md), [Live setup](LIVE_SETUP.md), and [Verification](VERIFICATION.md) for the current behavior; the phase table below retains the original roadmap.
 
 ## Reference and design direction
 
@@ -46,7 +46,7 @@ flowchart LR
 - **Game progression:** verified sessions and results reference game/version/language. Clients eventually submit evidence, never authoritative XP amounts.
 - **Character relationship:** per-user/per-character affinity and scenario state, separate from conversations and avatars.
 
-React local state handles forms and interactions; Auth Context handles session state. Feature services own remote queries and mock adapters. No Redux or server-state dependency until cache/invalidation requirements justify one. Start with JavaScript and JSDoc for portable contracts; runtime validation is still necessary at every trust boundary.
+React local state handles forms and interactions; Auth Context handles session state. Feature services own Supabase queries and RPCs, with no mock fallback. The resource hook handles loading, failures, stale responses and invalidation. Runtime validation remains necessary at every trust boundary.
 
 ## Routes
 
@@ -141,9 +141,9 @@ Public curated assets: character art, approved model/texture variants, game cove
 
 ## First implementation behavior and mocks
 
-Real foundation: routing, responsive navigation, auth adapter/forms/session/guards, environment handling, reusable components, renderer switching, mock exercise interaction, portable avatar export, and SQL artifacts. If Supabase is configured, auth uses it and errors remain errors.
+The current application uses live queries and trusted database functions for the workflows described in Contracts. Empty/error states do not substitute sample progress or catalogs. The original source fixtures remain unused by production routes.
 
-Initially mocked: progress/reward figures, rankings, game catalog availability, opportunities, AI character text, relationship gains, PDF generation and admin preview content. Sample opportunities are fictional and have no real application/booking action. Character replies are scripted and labeled as such; no AI provider is contacted. A template preview is not represented as a generated production PDF. Persistence behavior must be explained per feature.
+The scripted conversation adapter and in-memory admin editor have been replaced. Character replies require a configured Edge provider; workbooks use published exercises and browser printing. Fictional opportunities are excluded. Voice, full standalone games, production character assets and external booking/payment services remain outside the implemented workflows.
 
 ## Dependencies and setup rationale
 
