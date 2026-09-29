@@ -103,4 +103,9 @@ insert into public.rooms (id, slug, name, kind, language_id, required_level, cap
   ('90000000-0000-4000-8000-000000000002', 'spanish-cafe', 'Spanish café', 'voice', '10000000-0000-4000-8000-000000000002', 'B1', 12, 'published')
 on conflict (id) do nothing;
 
+-- Playable browser challenges for local development. Production content is managed in /admin.
+insert into public.game_releases(game_id,version,platform,status,released_at,metadata)
+select id,'1.0.0','web','published',now(),jsonb_build_object('engine',case slug when 'typing-trails' then 'typing-trails' when 'word-dungeon' then 'word-dungeon' else 'sentence-builder' end,'launchEnabled',true)
+from public.games where slug in ('word-dungeon','typing-trails','grammar-guardian') and status='published'
+on conflict(game_id,platform,version) do nothing;
 commit;

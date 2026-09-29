@@ -1,66 +1,63 @@
-import { useState } from 'react';
-import { Badge, Card, Icon, PageHeader, ProgressBar } from '../../components/ui/index.jsx';
+import {
+  Badge,
+  Card,
+  EmptyState,
+  Icon,
+  PageHeader,
+  ProgressBar,
+} from '../../components/ui/index.jsx';
 import { achievementService } from '../../services/catalogService.js';
+import { useResource } from '../../hooks/useResource.js';
+import ResourceState from '../../components/ResourceState.jsx';
 import '../learning/catalog.css';
-
 export default function AchievementsPage() {
-  const [filter, setFilter] = useState('All achievements');
-  const achievements = achievementService
-    .list()
-    .filter(
-      (item) =>
-        filter === 'All achievements' || (filter === 'Unlocked' ? item.unlocked : !item.unlocked),
-    );
+  const resource = useResource(
+    async () => ({
+      items: await achievementService.list(),
+      progress: await achievementService.progress(),
+    }),
+    [],
+  );
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="MARKERS OF YOUR JOURNEY"
-        title="Every little victory matters."
-        description="The first hello. A week of showing up. Small milestones, worth remembering."
-        action={<Badge>Sample progression</Badge>}
+        eyebrow="YOUR LITTLE VICTORIES"
+        title="Every milestone means something."
+        description="Achievements unlock automatically as you learn and play."
       />
-      <div className="filter-row" role="group" aria-label="Filter achievements">
-        {['All achievements', 'Unlocked', 'In progress'].map((value) => (
-          <button
-            key={value}
-            className={`filter-chip ${value === filter ? 'active' : ''}`}
-            aria-pressed={filter === value}
-            onClick={() => setFilter(value)}
-          >
-            {value}
-          </button>
-        ))}
-      </div>
-      <div className="catalog-grid">
-        {achievements.map((achievement) => (
-          <Card
-            className={`achievement-card ${achievement.unlocked ? '' : 'locked'}`}
-            key={achievement.id}
-          >
-            <div className="section-heading">
-              <span className={`catalog-emblem ${achievement.unlocked ? 'amber' : 'violet'}`}>
-                <Icon name={achievement.icon} />
-              </span>
-              <Badge>{achievement.rarity}</Badge>
+      <ResourceState resource={resource}>
+        {({ items, progress }) => (
+          <>
+            <div className="catalog-grid">
+              {items.map((item) => {
+                const saved = progress.find((p) => p.achievement_id === item.id);
+                return (
+                  <Card key={item.id}>
+                    <Icon name={item.icon} />
+                    <h2>{item.title}</h2>
+                    <p className="muted">{item.description}</p>
+                    <Badge>{saved?.earned_at ? 'Earned' : 'In progress'}</Badge>
+                    <p>
+                      {saved?.progress || 0} / {item.requirement.target} · {item.xp_reward} XP
+                    </p>
+                    <ProgressBar
+                      value={saved?.progress || 0}
+                      max={item.requirement.target}
+                      label={item.title}
+                    />
+                  </Card>
+                );
+              })}
             </div>
-            <h2>{achievement.title}</h2>
-            <p className="muted">{achievement.description}</p>
-            <ProgressBar
-              value={achievement.progress}
-              max={achievement.target}
-              label={`${achievement.progress} / ${achievement.target}`}
-            />
-            <div className="section-heading">
-              <span className="muted">{achievement.reward} example reward</span>
-              <Badge>{achievement.unlocked ? 'Sample unlock' : 'In progress'}</Badge>
-            </div>
-          </Card>
-        ))}
-      </div>
-      <p className="catalog-disclaimer">
-        This is illustrative achievement progress. Account achievements and rewards will be granted
-        by the platform after validated activity.
-      </p>
+            {!items.length && (
+              <EmptyState
+                title="No achievements published yet"
+                description="Your platform administrator can add milestones from the admin panel."
+              />
+            )}
+          </>
+        )}
+      </ResourceState>
     </div>
   );
 }

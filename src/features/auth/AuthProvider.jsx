@@ -126,6 +126,14 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    if (!user || !supabase) return;
+    const identity = await authService.getIdentity(user.id);
+    if (identity.error) throw identity.error;
+    setProfile(identity.profile);
+    setRole(identity.role);
+  }, [user]);
+
   const value = useMemo(
     () => ({
       user,
@@ -143,8 +151,20 @@ export function AuthProvider({ children }) {
       updatePassword,
       signOut,
       startDemo,
+      refreshProfile,
     }),
-    [user, profile, role, loading, error, isPasswordRecovery, updatePassword, signOut, startDemo],
+    [
+      user,
+      profile,
+      role,
+      loading,
+      error,
+      isPasswordRecovery,
+      updatePassword,
+      signOut,
+      startDemo,
+      refreshProfile,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

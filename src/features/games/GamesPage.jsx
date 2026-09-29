@@ -1,72 +1,61 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import { Badge, Card, EmptyState, Icon, PageHeader } from '../../components/ui/index.jsx';
+import { Card, PageHeader, Badge, Icon, EmptyState } from '../../components/ui/index.jsx';
 import { gameService } from '../../services/catalogService.js';
+import { useResource } from '../../hooks/useResource.js';
+import ResourceState from '../../components/ResourceState.jsx';
 import '../learning/catalog.css';
-
 export default function GamesPage() {
-  const [skill, setSkill] = useState('All skills');
-  const { pathname } = useLocation();
-  const games = gameService.list().filter((game) => skill === 'All skills' || game.skill === skill);
-  const basePath = pathname.startsWith('/app') ? '/app/games' : '/games';
+  const location = useLocation();
+  const prefix = location.pathname.startsWith('/app') ? '/app/games/' : '/games/';
+  const resource = useResource(gameService.list, []);
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="THE ARCADE"
-        title="Play a little. Learn a lot."
-        description="New worlds, familiar words. A growing collection of games for your language journey."
-        action={<Badge>Sample concepts</Badge>}
+        eyebrow="PLAY YOUR WAY FORWARD"
+        title="A little practice. A lot of adventure."
+        description="Choose a game, practice published lesson content, and save your score."
       />
-      <div className="filter-row" role="group" aria-label="Filter games by skill">
-        {['All skills', 'Vocabulary', 'Grammar', 'Writing'].map((value) => (
-          <button
-            className={`filter-chip ${value === skill ? 'active' : ''}`}
-            key={value}
-            aria-pressed={skill === value}
-            onClick={() => setSkill(value)}
-          >
-            {value}
-          </button>
-        ))}
-      </div>
-      <div className="catalog-grid">
-        {games.map((game) => (
-          <Card className="catalog-card" key={game.id}>
-            <div className={`catalog-visual ${game.color}`}>
-              <Icon name={game.icon} />
-              <span className="catalog-visual-caption">A NEW WAY TO LEARN</span>
+      <ResourceState resource={resource}>
+        {(games) => (
+          <>
+            <div className="catalog-grid">
+              {games.map((game) => (
+                <Card className="catalog-card" key={game.id}>
+                  <div className="catalog-visual sage">
+                    <Icon
+                      name={
+                        game.slug === 'word-dungeon'
+                          ? 'castle'
+                          : game.slug === 'typing-trails'
+                            ? 'keyboard'
+                            : 'extension'
+                      }
+                    />
+                  </div>
+                  <div className="catalog-body">
+                    <h2>{game.name}</h2>
+                    <p className="muted">{game.description}</p>
+                    <div className="tag-row">
+                      {game.skills.map((s) => (
+                        <Badge key={s}>{s}</Badge>
+                      ))}
+                    </div>
+                    <Link to={prefix + game.id} className="button button-primary">
+                      Open game <Icon name="arrow_forward" />
+                    </Link>
+                  </div>
+                </Card>
+              ))}
             </div>
-            <div className="catalog-body">
-              <div className="tag-row">
-                <Badge>{game.skill}</Badge>
-                <span className="muted">{game.language}</span>
-              </div>
-              <h2>{game.name}</h2>
-              <p className="muted">{game.description}</p>
-              <p className="catalog-meta">
-                {game.level}
-                <span>·</span>
-                {game.platform}
-                <span>·</span>Planned
-              </p>
-              <Link className="button button-secondary" to={`${basePath}/${game.id}`}>
-                Explore concept <Icon name="arrow_forward" />
-              </Link>
-            </div>
-          </Card>
-        ))}
-      </div>
-      {!games.length && (
-        <EmptyState
-          icon="sports_esports"
-          title="More games are on the horizon"
-          description="Try a different skill filter."
-        />
-      )}
-      <p className="catalog-disclaimer">
-        These are game concepts for the future platform. Playable games, downloads, scores, and
-        rewards are not available yet.
-      </p>
+            {!games.length && (
+              <EmptyState
+                title="No games published yet"
+                description="Games become available when an administrator publishes a supported release."
+              />
+            )}
+          </>
+        )}
+      </ResourceState>
     </div>
   );
 }

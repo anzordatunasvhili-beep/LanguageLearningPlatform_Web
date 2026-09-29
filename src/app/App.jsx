@@ -28,8 +28,10 @@ const Profile = lazy(() => import('../features/profile/ProfilePage.jsx'));
 const Settings = lazy(() => import('../features/profile/SettingsPage.jsx'));
 const Achievements = lazy(() => import('../features/achievements/AchievementsPage.jsx'));
 const Library = lazy(() => import('../features/pdfs/LibraryPage.jsx'));
+const Material = lazy(() => import('../features/pdfs/MaterialPage.jsx'));
 const AdminDashboard = lazy(() => import('../features/admin/AdminDashboard.jsx'));
 const PdfTemplates = lazy(() => import('../features/admin/PdfTemplatesPage.jsx'));
+const AdminCatalog = lazy(() => import('../features/admin/AdminCatalogPage.jsx'));
 
 export default function App() {
   const location = useLocation();
@@ -99,6 +101,7 @@ export default function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="achievements" element={<Achievements />} />
             <Route path="library" element={<Library />} />
+            <Route path="library/:materialId" element={<Material />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>
@@ -106,6 +109,7 @@ export default function App() {
           <Route path="admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="pdf-templates" element={<PdfTemplates />} />
+            <Route path=":resource" element={<AdminCatalog />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>

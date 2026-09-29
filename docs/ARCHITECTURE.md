@@ -52,7 +52,7 @@ React local state handles forms and interactions; Auth Context handles session s
 
 | Area | Initial routes | Later extension |
 | --- | --- | --- |
-| Public | `/`, `/games`, `/opportunities` | `/features`, `/about` |
+| Public | `/`, `/games`, `/games/:gameId`, `/opportunities` | `/features`, `/about` |
 | Auth | `/auth/login`, `/auth/register`, `/auth/reset-password`, `/auth/update-password`, `/auth/callback` | MFA and account recovery policy |
 | Learning | `/app`, `/app/dashboard`, `/app/learn`, `/app/course/:courseId`, `/app/lesson/:lessonId` | language overview, additional exercise types |
 | Games | `/app/games`, `/app/games/:gameId`, `/app/leaderboards` | game-specific rankings and release history |

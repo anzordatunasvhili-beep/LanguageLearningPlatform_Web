@@ -35,3 +35,7 @@ enable_confirmations = true
 [storage]
 enabled = true
 file_size_limit = "25MiB"
+
+[functions.ai-conversation]
+# Authentication is enforced inside the function with auth.getUser(token).
+verify_jwt = false

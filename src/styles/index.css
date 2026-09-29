@@ -3455,6 +3455,74 @@ textarea:focus-visible {
     font-size: 11px;
   }
 }
+.admin-nav {
+  flex-wrap: wrap;
+}
+.room-chat-log {
+  display: grid;
+  gap: 12px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+.chat-message {
+  background: #f2f3ec;
+  border-radius: 12px;
+  padding: 14px;
+  overflow-wrap: anywhere;
+}
+.chat-message.mine,
+.chat-message.is-mine {
+  background: #e5edce;
+}
+.chat-message p {
+  white-space: pre-wrap;
+}
+.settings-form {
+  display: grid;
+  gap: 20px;
+}
+.answer-line {
+  border-bottom: 1px solid #888;
+  height: 56px;
+  margin-top: 16px;
+}
+.workbook-question {
+  break-inside: avoid;
+}
+.workbook-answers {
+  break-before: page;
+}
+@media print {
+  .sidebar,
+  .app-topbar,
+  .mobile-nav,
+  .app-footer,
+  .print-controls,
+  .skip-link {
+    display: none !important;
+  }
+  .app-shell,
+  .app-body,
+  .app-main {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .app-content {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  body,
+  .card {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  .workbook-answers {
+    page-break-before: always;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *:before,

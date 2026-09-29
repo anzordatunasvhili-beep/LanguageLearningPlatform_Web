@@ -1,56 +1,48 @@
 import { Link } from 'react-router';
-import { characters } from '../../data/characters.js';
 import CharacterRenderer from './CharacterRenderer.jsx';
-import { Badge, Icon, PageHeader } from '../../components/ui/index.jsx';
-
+import { Card, PageHeader } from '../../components/ui/index.jsx';
+import { characterService } from '../../services/catalogService.js';
+import { useResource } from '../../hooks/useResource.js';
+import ResourceState from '../../components/ResourceState.jsx';
 export default function CharactersPage() {
+  const resource = useResource(() => characterService.list(), []);
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="A LANGUAGE IS A WAY TO CONNECT"
+        eyebrow="LANGUAGE THROUGH CONVERSATION"
         title="New faces. New stories."
-        description="Get to know the people who make your practice feel like a conversation."
-        action={<Badge>Scripted character previews</Badge>}
+        description="Choose a character and a published scenario for your language practice."
       />
-      <div className="character-grid">
-        {characters.map((character, i) => (
-          <Link
-            className="character-card"
-            to={`/app/ai/characters/${character.id}`}
-            key={character.id}
-            style={{ '--character-color': character.color }}
-          >
-            <div className="character-card-art">
-              <span className="character-number">0{i + 1}</span>
-              <span className="character-script">{character.initials}</span>
-              <CharacterRenderer name={character.name} appearance={character.appearance} />
-              <span className="character-location">
-                <Icon name="location_on" />
-                {character.city}, {character.country}
-              </span>
+      <ResourceState resource={resource}>
+        {(characters) =>
+          characters.length ? (
+            <div className="character-grid">
+              {characters.map((c) => (
+                <Link
+                  className="character-card"
+                  to={'/app/ai/characters/' + c.id}
+                  key={c.id}
+                  style={{ '--character-color': c.presentation?.color || '#dce0d5' }}
+                >
+                  <div className="character-card-art">
+                    <CharacterRenderer name={c.name} appearance={c.presentation?.appearance} />
+                    <span className="character-location">
+                      {[c.city, c.country].filter(Boolean).join(', ')}
+                    </span>
+                  </div>
+                  <div className="character-card-copy">
+                    <p className="eyebrow">{c.language?.name}</p>
+                    <h2>{c.name}</h2>
+                    <p>{c.biography}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
-            <div className="character-card-copy">
-              <div className="section-heading">
-                <p className="eyebrow">
-                  {character.language} · {character.level}
-                </p>
-                <Icon name="north_east" />
-              </div>
-              <h2>{character.name}</h2>
-              <p>{character.occupation}</p>
-              <p className="muted">{character.personality}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
-      <div className="editorial-note">
-        <span>“</span>
-        <p>
-          Every person is a door to another world.
-          <br />
-          <em>Sometimes, all it takes is hello.</em>
-        </p>
-      </div>
+          ) : (
+            <Card>No characters have been published yet.</Card>
+          )
+        }
+      </ResourceState>
     </div>
   );
 }

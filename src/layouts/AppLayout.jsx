@@ -68,7 +68,6 @@ export default function AppLayout() {
                 >
                   <Icon name={icon} />
                   <span>{label}</span>
-                  {label === 'Characters' && <span className="nav-new">NEW</span>}
                 </NavLink>
               ))}
             </div>
@@ -83,23 +82,17 @@ export default function AppLayout() {
               <strong>starts with a word.</strong>
             </p>
           </div>
-          {(isDemo || role === 'admin') && (
+          {role === 'admin' && (
             <Link className="nav-item" to="/admin">
               <Icon name="admin_panel_settings" />
-              {isDemo ? 'Admin preview' : 'Administration'}
+              Administration
             </Link>
           )}
           <Link className="sidebar-profile" to={profilePath}>
             <div className="avatar-initial">{displayName.slice(0, 1)}</div>
             <div>
               <strong>{displayName}</strong>
-              <small>
-                {isDemo
-                  ? 'Sample explorer account'
-                  : profile
-                    ? 'Your explorer account'
-                    : 'Account settings'}
-              </small>
+              <small>{profile ? 'Your explorer account' : 'Account settings'}</small>
             </div>
             <Icon name="chevron_right" />
           </Link>
@@ -129,13 +122,9 @@ export default function AppLayout() {
           </div>
           <div className="topbar-actions">
             <Link className="language-switch" to="/app/learn">
-              <span className="japan-dot" /> Japanese <Icon name="expand_more" />
+              <Icon name="language" /> Learning <Icon name="expand_more" />
             </Link>
             <span className="topbar-divider" />
-            <span className="streak-chip" title="Sample streak" aria-label="Sample streak: 12 days">
-              <Icon name="local_fire_department" />
-              <small>Sample</small> 12 <span>day streak</span>
-            </span>
             <Link className="icon-button" aria-label="Account settings" to="/app/settings">
               <Icon name="settings" />
             </Link>
@@ -156,10 +145,6 @@ export default function AppLayout() {
           </div>
         </header>
         <main id="main-content" className="app-main">
-          <div className="demo-ribbon">
-            <span className="status-dot" /> FOUNDATION PREVIEW{' '}
-            <span>Sample learning content and progression</span>
-          </div>
           {error && (
             <p role="alert" className="notice notice-error">
               {error}
@@ -174,7 +159,7 @@ export default function AppLayout() {
         </main>
         <footer className="app-footer">
           <span>Small steps. New worlds.</span>
-          <span>Kotoba · Foundation 01</span>
+          <span>Kotoba</span>
         </footer>
       </div>
     </div>

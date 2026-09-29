@@ -24,7 +24,7 @@ export default function PublicLayout() {
           kotoba.
         </Link>
         <span>A little practice. A bigger world.</span>
-        <span>Foundation preview · 2026</span>
+        <span>Kotoba · 2026</span>
       </footer>
     </div>
   );

@@ -1,165 +1,131 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router';
-import { characters } from '../../data/characters.js';
-import CharacterRenderer from '../characters/CharacterRenderer.jsx';
+import { Link, useParams, useSearchParams } from 'react-router';
+import { characterService } from '../../services/catalogService.js';
 import { aiService } from '../../services/aiService.js';
-import { Button, EmptyState, Icon } from '../../components/ui/index.jsx';
-
-function Conversation({ character }) {
-  const initial = {
-    text: character.greeting,
-    translation: character.translation,
-    emotion: 'neutral',
-    options:
-      character.id === 'haruka'
-        ? ['はい、初めてです！', 'おすすめは何ですか？']
-        : character.id === 'mateo'
-          ? ['¡Muy bien, gracias!', 'Bien, ¿y tú?']
-          : ['Oui, un livre facile.', 'Bonjour ! Je m’appelle Alex.'],
-  };
-  const [line, setLine] = useState(initial);
-  const [turn, setTurn] = useState(0);
-  const [translation, setTranslation] = useState(false);
-  const [message, setMessage] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [lastReply, setLastReply] = useState('');
-  async function reply(value) {
-    if (busy) return;
+import { Button, Card, PageHeader } from '../../components/ui/index.jsx';
+import { useResource } from '../../hooks/useResource.js';
+import ResourceState from '../../components/ResourceState.jsx';
+function Conversation({ character, scenario }) {
+  const [sessionId, setSessionId] = useState(null),
+    [messages, setMessages] = useState([]),
+    [message, setMessage] = useState(''),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('');
+  async function open(fresh = false) {
     setBusy(true);
     setError('');
     try {
-      const result = await aiService.respond({ characterId: character.id, turn, message: value });
-      setLine(result);
-      setTurn((t) => t + 1);
-      setLastReply(value);
+      const id = await aiService.open(scenario.id, fresh);
+      setSessionId(id);
+      setMessages(await aiService.messages(id));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function send(e) {
+    e.preventDefault();
+    if (!message.trim() || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await aiService.respond({ sessionId, message, requestId: crypto.randomUUID() });
       setMessage('');
-    } catch (failure) {
-      setError(failure.message);
+      setMessages(await aiService.messages(sessionId));
+    } catch (e) {
+      setError(e.message);
     } finally {
       setBusy(false);
     }
   }
   return (
     <div className="page-stack">
-      <div className="section-heading">
-        <Link className="text-link" to={`/app/ai/characters/${character.id}`}>
-          <Icon name="arrow_back" /> Back to {character.name}
-        </Link>
-        <span className="badge">Scripted scene · {Math.min(turn + 1, 4)} / 4</span>
-      </div>
-      <section className="conversation-scene">
-        <div className="scene-window">
-          <span className="scene-sun" />
-          <div className="scene-city" />
-        </div>
-        <div className="scene-caption">
-          <span className="eyebrow">{character.city.toUpperCase()} · A SMALL BEGINNING</span>
-          <h1>{character.scene}</h1>
-        </div>
-        <div className="scene-character">
-          <CharacterRenderer
-            appearance={character.appearance}
-            name={character.name}
-            emotion={line.emotion}
-          />
-        </div>
-        <div className="scene-table" />
-        <div className="dialogue-panel">
-          <div className="section-heading">
-            <p className="eyebrow">
-              {character.name} <span>· {character.language}</span>
-            </p>
-            <Button
-              variant="ghost"
-              aria-pressed={translation}
-              onClick={() => setTranslation((v) => !v)}
-            >
-              <Icon name="translate" />
-              Translation
-            </Button>
-          </div>
-          <div aria-live="polite">
-            <p className="dialogue-text">{line.text}</p>
-            {translation && <p className="muted">{line.translation}</p>}
-          </div>
-        </div>
-      </section>
-      <div className="conversation-controls">
-        {lastReply && <p className="last-reply">You: {lastReply}</p>}
-        {line.options.length ? (
+      <Link className="text-link" to={'/app/ai/characters/' + character.id}>
+        Back to {character.name}
+      </Link>
+      <PageHeader
+        eyebrow={character.language?.name + ' · ' + scenario.level}
+        title={scenario.title}
+        description={scenario.objective}
+      />
+      <Card>
+        {!sessionId ? (
           <>
-            <p className="eyebrow">WHAT WILL YOU SAY?</p>
-            <div className="response-options">
-              {line.options.map((option) => (
-                <Button
-                  variant="secondary"
-                  key={option}
-                  disabled={busy}
-                  onClick={() => reply(option)}
-                >
-                  {option}
-                  <Icon name="arrow_forward" />
-                </Button>
-              ))}
+            <p>
+              Continue your saved conversation or start a new one. Your messages are sent to the
+              configured AI provider and saved to your account.
+            </p>
+            <Button disabled={busy} onClick={() => open(false)}>
+              {busy ? 'Opening…' : 'Open conversation'}
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="room-chat-log" aria-live="polite">
+              {messages.length ? (
+                messages.map((m) => (
+                  <div key={m.id} className={'chat-message ' + (m.role === 'user' ? 'mine' : '')}>
+                    <strong>{m.role === 'user' ? 'You' : character.name}</strong>
+                    <p>{m.content}</p>
+                  </div>
+                ))
+              ) : (
+                <p>Say hello to start practicing with {character.name}.</p>
+              )}
+              {busy && <p role="status">Waiting for a reply…</p>}
             </div>
-            <form
-              className="reply-form"
-              onSubmit={(event) => {
-                event.preventDefault();
-                reply(message);
-              }}
-            >
+            <form className="reply-form" onSubmit={send}>
               <label className="sr-only" htmlFor="own-response">
-                Write your own response
+                Your message
               </label>
               <input
                 id="own-response"
                 value={message}
-                maxLength={500}
-                placeholder="Or write your own response…"
-                onChange={(event) => setMessage(event.target.value)}
+                maxLength={1500}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Write your message…"
+                disabled={busy}
               />
-              <Button type="submit" disabled={busy || !message.trim()} aria-label="Send response">
-                <Icon name="send" />
+              <Button type="submit" disabled={busy || !message.trim()}>
+                Send
               </Button>
             </form>
-          </>
-        ) : (
-          <div className="scene-complete">
-            <Icon name="check_circle" />
-            <div>
-              <h2>A lovely first conversation.</h2>
-              <p className="muted">You’ve reached the end of this sample scene.</p>
-            </div>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setLine(initial);
-                setTurn(0);
-                setLastReply('');
-                setTranslation(false);
-              }}
-            >
-              Try again
+            <Button variant="ghost" disabled={busy} onClick={() => open(true)}>
+              New conversation
             </Button>
-          </div>
+            <p className="muted small">
+              AI replies may contain mistakes. Up to 30 replies per day. The model receives the
+              latest 12 messages.
+            </p>
+          </>
         )}
-        {error && <p role="alert">{error}</p>}
-        <p className="muted small">
-          This scene uses fixed sample replies, including after typed messages. Responses are not
-          graded or saved.
-        </p>
-      </div>
+        {error && (
+          <p role="alert" className="notice notice-error">
+            {error}
+          </p>
+        )}
+      </Card>
     </div>
   );
 }
 export default function ConversationPage() {
   const { characterId } = useParams();
-  const character = characters.find((item) => item.id === characterId);
-  return character ? (
-    <Conversation key={character.id} character={character} />
-  ) : (
-    <EmptyState title="Scene not found" description="Choose a character to begin a sample scene." />
+  const [params] = useSearchParams();
+  const selected = params.get('scenario');
+  const resource = useResource(() => characterService.get(characterId), [characterId]);
+  return (
+    <ResourceState resource={resource}>
+      {(character) => {
+        const scenario = character?.scenarios.find(
+          (s) => s.status === 'published' && (!selected || s.id === selected),
+        );
+        return scenario ? (
+          <Conversation key={scenario.id} character={character} scenario={scenario} />
+        ) : (
+          <Card>Conversation unavailable. Choose a published scenario.</Card>
+        );
+      }}
+    </ResourceState>
   );
 }

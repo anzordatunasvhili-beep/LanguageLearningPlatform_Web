@@ -1,55 +1,143 @@
-import {
-  courses,
-  units,
-  lessons,
-  exercises,
-  games,
-  leaderboardEntries,
-  opportunities,
-  rooms,
-  achievements,
-  pdfTemplates,
-} from '../data/catalog.js';
+import { client, unwrap, perform } from './platformService.js';
 
-// Local catalog adapter: replace these reads at this boundary when published content is connected.
-// TODO: use server-assessed exercise attempts before granting XP or writing progression.
 export const learningService = {
-  listCourses: () => courses,
-  getCourse: (id) => courses.find((course) => course.id === id),
-  listUnits: (courseId) => units.filter((unit) => unit.courseId === courseId),
-  listLessons: (unitId) => lessons.filter((lesson) => lesson.unitId === unitId),
-  getLesson: (id) => lessons.find((lesson) => lesson.id === id),
-  getExercises: (lessonId) => exercises.filter((exercise) => exercise.lessonId === lessonId),
+  languages: () => unwrap(client().from('languages').select('*').eq('enabled', true).order('name')),
+  listCourses: () =>
+    unwrap(
+      client()
+        .from('courses')
+        .select('*, language:languages(*), units(id)')
+        .eq('status', 'published')
+        .order('title'),
+    ),
+  async course(id) {
+    const course = await unwrap(
+      client()
+        .from('courses')
+        .select('*, language:languages(*)')
+        .eq('id', id)
+        .eq('status', 'published')
+        .maybeSingle(),
+    );
+    if (!course) return null;
+    const units = await unwrap(
+      client()
+        .from('units')
+        .select('*, lessons(*)')
+        .eq('course_id', id)
+        .eq('status', 'published')
+        .order('position'),
+    );
+    return {
+      ...course,
+      units: units.map((unit) => ({
+        ...unit,
+        lessons: unit.lessons
+          .filter((l) => l.status === 'published')
+          .sort((a, b) => a.position - b.position),
+      })),
+    };
+  },
+  lessons: () =>
+    unwrap(
+      client()
+        .from('lessons')
+        .select('*, unit:units(course:courses(id,title,language_id))')
+        .eq('status', 'published')
+        .order('title'),
+    ),
+  start: (lessonId, releaseId = null) => perform('start_practice', { lessonId, releaseId }),
+  answer: (runId, exerciseId, answer) => perform('answer', { runId, exerciseId, answer }),
+  finish: (runId) => perform('finish_practice', { runId }),
 };
 export const gameService = {
-  list: () => games,
-  get: (id) => games.find((game) => game.id === id),
-  // TODO: external game clients submit signed, replay-protected result events to an authenticated API.
+  list: () =>
+    unwrap(
+      client()
+        .from('games')
+        .select('*, releases:game_releases(*)')
+        .eq('status', 'published')
+        .order('name'),
+    ),
+  get: (id) =>
+    unwrap(
+      client()
+        .from('games')
+        .select('*, releases:game_releases(*)')
+        .eq('id', id)
+        .eq('status', 'published')
+        .maybeSingle(),
+    ),
 };
-export const opportunityService = { list: () => opportunities };
-export const roomService = { list: () => rooms }; // TODO: membership checks and moderated realtime rooms.
-export const achievementService = { list: () => achievements };
+export const opportunityService = {
+  list: () =>
+    unwrap(
+      client()
+        .from('opportunities')
+        .select('*, language:languages(*)')
+        .eq('status', 'published')
+        .eq('is_demo', false)
+        .order('deadline', { nullsFirst: false }),
+    ),
+};
+export const roomService = {
+  list: () =>
+    unwrap(
+      client()
+        .from('rooms')
+        .select('*, language:languages(*)')
+        .eq('status', 'published')
+        .order('name'),
+    ),
+  memberships: () => unwrap(client().from('room_members').select('*')),
+  join: (roomId) => perform('join_room', { roomId }),
+  leave: (roomId) => perform('leave_room', { roomId }),
+  feed: (roomId) => perform('room_feed', { roomId }),
+  send: (roomId, body) => perform('send_message', { roomId, body }),
+};
+export const achievementService = {
+  list: () => unwrap(client().from('achievements').select('*').eq('enabled', true).order('title')),
+  progress: () => unwrap(client().from('user_achievements').select('*')),
+};
 export const leaderboardService = {
-  list: ({ period = 'weekly', language = 'All languages' } = {}) =>
-    leaderboardEntries
-      .filter((entry) => language === 'All languages' || entry.language === language)
-      .map((entry) => ({ ...entry, xp: period === 'weekly' ? entry.weeklyXp : entry.totalXp }))
-      .sort((a, b) => b.xp - a.xp),
+  list: ({ period = 'weekly', languageId = null } = {}) =>
+    perform('leaderboard', { period, languageId }),
 };
 export const pdfService = {
-  listTemplates: () => pdfTemplates,
-  // Template validation is local; no AI invocation, document generation, or publication occurs.
-  validateTemplate: (template) => {
-    if (!template.name.trim()) return 'Give this template a name.';
-    if (!template.sections.length) return 'Choose at least one section.';
-    if (
-      !Number.isInteger(Number(template.questionCount)) ||
-      Number(template.questionCount) < 1 ||
-      Number(template.questionCount) > 50
-    )
-      return 'Choose between 1 and 50 questions.';
-    if (!template.instructions.trim()) return 'Add instructions for the learning material.';
-    return null;
-  },
-  // TODO: privileged generation job -> validated structured content -> private PDF storage.
+  listTemplates: () =>
+    unwrap(
+      client()
+        .from('pdf_templates')
+        .select('*, language:languages(*)')
+        .eq('status', 'published')
+        .order('name'),
+    ),
+  list: () =>
+    unwrap(
+      client()
+        .from('generated_materials')
+        .select('id,title,status,created_at,template_id')
+        .order('created_at', { ascending: false }),
+    ),
+  get: (id) => unwrap(client().from('generated_materials').select('*').eq('id', id).maybeSingle()),
+  generate: (templateId) => perform('generate_material', { templateId }),
+};
+export const characterService = {
+  list: () =>
+    unwrap(
+      client()
+        .from('ai_characters')
+        .select('*, language:languages(*), scenarios:ai_scenarios(*)')
+        .eq('status', 'published')
+        .order('name'),
+    ),
+  get: (id) =>
+    unwrap(
+      client()
+        .from('ai_characters')
+        .select('*, language:languages(*), scenarios:ai_scenarios(*)')
+        .eq('id', id)
+        .eq('status', 'published')
+        .maybeSingle(),
+    ),
 };

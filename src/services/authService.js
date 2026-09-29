@@ -65,7 +65,7 @@ export const authService = {
     const [profileResult, roleResult] = await Promise.all([
       client
         .from('profiles')
-        .select('id, username, display_name, country, native_language_id')
+        .select('id, username, display_name, country, native_language_id, is_public')
         .eq('id', userId)
         .maybeSingle(),
       client.rpc('get_my_role'),

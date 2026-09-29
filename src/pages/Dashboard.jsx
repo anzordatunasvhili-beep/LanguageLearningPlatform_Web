@@ -1,264 +1,244 @@
 import { Link } from 'react-router';
 import { useAuth } from '../features/auth/AuthProvider.jsx';
-import { dailyQuests, skillProgress } from '../data/dashboard.js';
-import { characters } from '../data/characters.js';
-import CharacterRenderer from '../features/characters/CharacterRenderer.jsx';
-import { Badge, Card, Icon, ProgressBar } from '../components/ui/index.jsx';
-
+import { playerService } from '../services/platformService.js';
+import { learningService, characterService } from '../services/catalogService.js';
+import { useResource } from '../hooks/useResource.js';
+import ResourceState from '../components/ResourceState.jsx';
+import { Card, Icon, ProgressBar, PageHeader, EmptyState } from '../components/ui/index.jsx';
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+  const resource = useResource(async () => {
+    const [player, courses, characters] = await Promise.all([
+      playerService.overview(),
+      learningService.listCourses(),
+      characterService.list(),
+    ]);
+    return { player, courses, characters };
+  }, [user?.id]);
   return (
     <div className="dashboard page-stack">
-      <header className="dashboard-heading">
-        <div>
-          <p className="eyebrow">A LITTLE EVERY DAY GOES A LONG WAY</p>
-          <h1>
-            Your next chapter, <em>{profile?.display_name || 'explorer'}.</em>
-          </h1>
-          <p className="muted">A new word. A new connection. A little more of the world.</p>
-        </div>
-        <div className="dashboard-date">
-          <Icon name="wb_sunny" />
-          <span>
-            Make today
-            <br />
-            <strong>a good story.</strong>
-          </span>
-        </div>
-      </header>
-      <div className="dashboard-columns">
-        <div className="dashboard-primary">
-          <section className="journey-hero">
-            <div className="journey-copy">
-              <span className="outline-pill">
-                <span className="status-dot" /> YOUR JAPANESE JOURNEY
-              </span>
-              <p className="hero-chapter">
-                CHAPTER 01 <span>—</span> EVERYDAY BEGINNINGS
-              </p>
-              <h2>
-                A whole new world
-                <br />
-                starts with <em>hello.</em>
-              </h2>
-              <p>
-                Find your voice in Japanese.
-                <br />
-                One small conversation at a time.
-              </p>
-              <Link className="button button-lime" to="/app/lesson/ja-hello">
-                Continue learning <Icon name="arrow_forward" />
-              </Link>
-              <div className="hero-meta">
-                <span>
-                  <Icon name="schedule" /> 5-minute practice
-                </span>
-                <span>
-                  <Icon name="school" /> A1 · Foundations
-                </span>
-              </div>
-            </div>
-            <div className="japan-art" aria-hidden="true">
-              <div className="sun-disc" />
-              <span className="japan-calligraphy">
-                始<br />ま<br />り
-              </span>
-              <div className="mountain mountain-back" />
-              <div className="mountain mountain-front" />
-              <div className="torii">
-                <i />
-                <b />
-                <span />
-                <em />
-              </div>
-              <div className="art-ground" />
-              <span className="art-caption">THE ART OF BEGINNING</span>
-            </div>
-          </section>
-          <div className="journey-stats">
-            <div>
-              <span className="stat-icon">
-                <Icon name="language" />
-              </span>
-              <div>
-                <small>Language level</small>
-                <strong>
-                  A1 <span>Explorer</span>
-                </strong>
-              </div>
-            </div>
-            <div>
-              <span className="stat-icon gold">
-                <Icon name="bolt" />
-              </span>
-              <div>
-                <small>Sample account XP</small>
-                <strong>
-                  12,450 <span>XP</span>
-                </strong>
-              </div>
-            </div>
-            <div>
-              <span className="stat-icon rose">
-                <Icon name="local_fire_department" />
-              </span>
-              <div>
-                <small>Sample streak</small>
-                <strong>
-                  12 <span>days & counting</span>
-                </strong>
-              </div>
-            </div>
-          </div>
-          <section>
-            <div className="section-heading">
-              <h2>A different way to practice</h2>
-              <Link className="text-link" to="/app/games">
-                Explore games <Icon name="arrow_forward" />
-              </Link>
-            </div>
-            <div className="practice-grid">
-              <Link className="practice-card practice-dungeon" to="/app/games/word-dungeon">
-                <span className="practice-number">01 / PLAY</span>
-                <div className="mini-art">
-                  <Icon name="castle" />
-                  <span>言</span>
-                </div>
-                <div>
-                  <Badge>COMING LATER</Badge>
-                  <h3>Word Dungeon</h3>
-                  <p>Words are your way forward.</p>
-                  <span className="practice-link">
-                    Vocabulary adventure <Icon name="north_east" />
-                  </span>
-                </div>
-              </Link>
-              <Link className="practice-card practice-typing" to="/app/games/typing-trails">
-                <span className="practice-number">02 / FIND YOUR FLOW</span>
-                <div className="typing-art" aria-hidden="true">
-                  <span>h</span>
-                  <span>o</span>
-                  <span>l</span>
-                  <span>a</span>
-                </div>
-                <div>
-                  <Badge>COMING LATER</Badge>
-                  <h3>Typing Trails</h3>
-                  <p>A little focus. A lot of possibility.</p>
-                  <span className="practice-link">
-                    Writing & vocabulary <Icon name="north_east" />
-                  </span>
-                </div>
-              </Link>
-            </div>
-          </section>
-          <section className="meet-card">
-            <div className="meet-art">
-              <span>水野</span>
-              <CharacterRenderer name="Haruka" appearance={characters[0].appearance} />
-            </div>
-            <div className="meet-copy">
-              <p className="eyebrow">SOMEONE NEW TO SAY HELLO TO</p>
-              <h2>
-                A coffee with <em>Haruka.</em>
-              </h2>
-              <p>
-                Your table is waiting in Shimokitazawa.
-                <br />
-                Let’s turn a few words into a conversation.
-              </p>
-              <Link className="text-link" to="/app/ai/characters/haruka">
-                Meet Haruka <Icon name="arrow_forward" />
-              </Link>
-              <span className="small muted">Japanese · Scripted scene preview</span>
-            </div>
-            <span className="meet-stamp">
-              TOKYO
-              <br />
-              <b>東京</b>
-            </span>
-          </section>
-        </div>
-        <aside className="dashboard-secondary">
-          <Card className="quest-card">
-            <div className="section-heading">
-              <h2>Small steps, big things.</h2>
-              <Icon name="wb_twilight" />
-            </div>
-            <p className="muted small">Your daily quests · sample progress</p>
-            <div className="quest-summary">
-              <strong>
-                0 <span>/ 3 complete</span>
-              </strong>
-              <span>175 XP available</span>
-            </div>
-            <ProgressBar value={0} label="Sample daily quests completed" />
-            <div className="quest-list">
-              {dailyQuests.map((quest) => (
-                <Link className="quest-item" to={quest.to} key={quest.title}>
-                  <span className="quest-icon">
-                    <Icon name={quest.icon} />
-                  </span>
-                  <div>
-                    <h3>{quest.title}</h3>
-                    <p>{quest.detail}</p>
-                    <div className="quest-progress">
-                      <ProgressBar value={quest.current} max={quest.total} label={quest.title} />
-                      <span>
-                        {quest.current}/{quest.total}
+      <PageHeader
+        eyebrow="A LITTLE EVERY DAY GOES A LONG WAY"
+        title={'Your next chapter, ' + (profile?.display_name || 'explorer') + '.'}
+        description="Your learning, achievements, and next steps—all in one place."
+      />
+      <ResourceState resource={resource}>
+        {({ player, courses, characters }) => {
+          const course =
+            courses.find((c) => c.language_id === player.settings.preferred_language_id) ||
+            courses[0];
+          const today = player.daily.find((d) => d.activity_date === player.today);
+          return (
+            <>
+              <div className="dashboard-columns">
+                <div className="dashboard-primary">
+                  <section className="journey-hero">
+                    <div className="journey-copy">
+                      <span className="outline-pill">YOUR LANGUAGE JOURNEY</span>
+                      <p className="hero-chapter">
+                        {course?.language?.name || 'DISCOVER A NEW LANGUAGE'}
+                      </p>
+                      <h2>{course?.title || 'Your story starts here.'}</h2>
+                      <p>
+                        {course?.description ||
+                          'Explore published courses and take your first step.'}
+                      </p>
+                      <Link
+                        className="button button-lime"
+                        to={course ? '/app/course/' + course.id : '/app/learn'}
+                      >
+                        {course ? 'Continue learning' : 'Explore courses'}
+                        <Icon name="arrow_forward" />
+                      </Link>
+                    </div>
+                    <div className="japan-art" aria-hidden="true">
+                      <div className="sun-disc" />
+                      <div className="mountain mountain-back" />
+                      <div className="mountain mountain-front" />
+                    </div>
+                  </section>
+                  <div className="journey-stats">
+                    <div>
+                      <span className="stat-icon gold">
+                        <Icon name="bolt" />
                       </span>
+                      <div>
+                        <small>Total XP</small>
+                        <strong>{player.progress.total_xp.toLocaleString()}</strong>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="stat-icon rose">
+                        <Icon name="local_fire_department" />
+                      </span>
+                      <div>
+                        <small>Current streak</small>
+                        <strong>
+                          {player.progress.current_streak}
+                          <span>days</span>
+                        </strong>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="stat-icon">
+                        <Icon name="school" />
+                      </span>
+                      <div>
+                        <small>Completed lessons</small>
+                        <strong>{player.lessons.filter((l) => l.completed_at).length}</strong>
+                      </div>
                     </div>
                   </div>
-                  <span className="quest-xp">+{quest.xp}</span>
-                </Link>
-              ))}
-            </div>
-            <div className="quest-footer">
-              <Icon name="auto_awesome" /> A little progress is still progress.
-            </div>
-          </Card>
-          <Card className="skills-card">
-            <div className="section-heading">
-              <h2>Finding your balance</h2>
-              <Icon name="tune" />
-            </div>
-            <p className="muted small">A sample of your skills in Japanese</p>
-            {skillProgress.map((skill) => (
-              <div className="skill-row" key={skill.name}>
-                <div>
-                  <span>
-                    <Icon name={skill.icon} />
-                    {skill.name}
-                  </span>
-                  <small>Lv. {skill.level}</small>
+                  <Card>
+                    <div className="section-heading">
+                      <h2>Your languages</h2>
+                      <Link className="text-link" to="/app/learn">
+                        Explore courses <Icon name="arrow_forward" />
+                      </Link>
+                    </div>
+                    {player.languages.length ? (
+                      player.languages.map((language) => (
+                        <div className="list-row" key={language.language_id}>
+                          <div>
+                            <strong>{language.language?.name}</strong>
+                            <p className="muted small">
+                              {language.assessed_level
+                                ? 'Assessed level: ' + language.assessed_level
+                                : 'Proficiency not yet assessed'}
+                            </p>
+                          </div>
+                          <span>{language.xp} XP</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="muted">
+                        Complete your first lesson to begin tracking a language.
+                      </p>
+                    )}
+                  </Card>
+                  <Card>
+                    <div className="section-heading">
+                      <h2>Recent lessons</h2>
+                      <Link className="text-link" to="/app/learn">
+                        All courses
+                      </Link>
+                    </div>
+                    {player.lessons.length ? (
+                      player.lessons.slice(0, 5).map((p) => (
+                        <div className="list-row" key={p.lesson_id}>
+                          <div>
+                            <strong>{p.lesson?.title}</strong>
+                            <p className="muted small">
+                              {p.best_accuracy}% best accuracy · {p.attempts} attempts
+                            </p>
+                          </div>
+                          <Link
+                            className="button button-secondary"
+                            to={'/app/lesson/' + p.lesson_id}
+                          >
+                            Review
+                          </Link>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="muted">Your saved lesson results will appear here.</p>
+                    )}
+                  </Card>
+                  {characters[0] && (
+                    <Card>
+                      <p className="eyebrow">PRACTICE A CONVERSATION</p>
+                      <h2>Meet {characters[0].name}</h2>
+                      <p className="muted">{characters[0].biography}</p>
+                      <Link className="text-link" to={'/app/ai/characters/' + characters[0].id}>
+                        Meet your conversation partner <Icon name="arrow_forward" />
+                      </Link>
+                    </Card>
+                  )}
                 </div>
-                <ProgressBar value={skill.percent} label={`${skill.name} sample progress`} />
+                <aside className="dashboard-secondary">
+                  <Card>
+                    <h2>Your daily goal</h2>
+                    <p className="muted">
+                      {today?.minutes || 0} / {player.settings.daily_target} minutes
+                    </p>
+                    <ProgressBar
+                      value={today?.minutes || 0}
+                      max={player.settings.daily_target}
+                      label="Daily learning target"
+                    />
+                    <p className="muted small">Time from completed learning and game sessions.</p>
+                    <Link className="text-link" to="/app/settings">
+                      Adjust your goal
+                    </Link>
+                  </Card>
+                  <Card>
+                    <h2>Daily quests</h2>
+                    {player.quests
+                      .filter((q) => q.kind === 'daily')
+                      .map((quest) => {
+                        const progress = player.questProgress.find(
+                          (p) => p.quest_id === quest.id && p.period_start === player.today,
+                        );
+                        return (
+                          <div className="quest-item" key={quest.id}>
+                            <Icon name={progress?.completed_at ? 'check_circle' : 'flag'} />
+                            <div>
+                              <h3>{quest.title}</h3>
+                              <p>
+                                {progress?.progress || 0} / {quest.requirement.target} ·{' '}
+                                {quest.xp_reward} XP
+                              </p>
+                              <ProgressBar
+                                value={progress?.progress || 0}
+                                max={quest.requirement.target}
+                                label={quest.title}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    {!player.quests.length && <p className="muted">No active quests yet.</p>}
+                  </Card>
+                  <Card>
+                    <h2>Your achievements</h2>
+                    {player.achievements
+                      .filter((a) => a.earned_at)
+                      .map((a) => (
+                        <div className="list-row" key={a.achievement_id}>
+                          <Icon name={a.achievement?.icon || 'emoji_events'} />
+                          <strong>{a.achievement?.title}</strong>
+                        </div>
+                      ))}
+                    {!player.achievements.some((a) => a.earned_at) && (
+                      <p className="muted">Your next milestone is waiting.</p>
+                    )}
+                    <Link className="text-link" to="/app/achievements">
+                      View achievements
+                    </Link>
+                  </Card>
+                  <Link className="world-card" to="/app/opportunities">
+                    <div className="world-card-top">
+                      <Icon name="travel_explore" />
+                      BEYOND THE SCREEN
+                    </div>
+                    <h2>
+                      Where could
+                      <br />
+                      your words
+                      <br />
+                      <em>take you?</em>
+                    </h2>
+                    <span className="text-link">
+                      Browse published opportunities
+                      <Icon name="north_east" />
+                    </span>
+                  </Link>
+                </aside>
               </div>
-            ))}
-            <Link className="text-link" to="/app/learn">
-              Grow your skills <Icon name="arrow_forward" />
-            </Link>
-          </Card>
-          <Link className="world-card" to="/app/opportunities">
-            <div className="world-card-top">
-              <Icon name="travel_explore" />
-              <span>BEYOND THE SCREEN</span>
-            </div>
-            <h2>
-              Where could
-              <br />
-              your words
-              <br />
-              <em>take you?</em>
-            </h2>
-            <p>Discover a world of possibilities.</p>
-            <span className="text-link">
-              Explore opportunities <Icon name="north_east" />
-            </span>
-            <div className="world-orbit" aria-hidden="true" />
-          </Link>
-        </aside>
-      </div>
+            </>
+          );
+        }}
+      </ResourceState>
     </div>
   );
 }

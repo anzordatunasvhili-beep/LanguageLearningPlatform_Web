@@ -59,7 +59,7 @@ TODO: add a server grading boundary with published content versions and private 
 
 Admin templates constrain language, level, sections, exercise types, question counts, instructions and answer behavior. Current UI edits an in-memory sample and previews its structure. It does not generate or download a PDF.
 
-TODO: immutable published template versions, a validated generation request, queued server jobs, provider output schema validation, pedagogical review, deterministic PDF rendering, job failure/retry states, private storage, short-lived signed downloads and retention/deletion. Generated material metadata must reference the exact template version. Payment or quota enforcement belongs on the backend.
+The SQL foundation already enforces immutable published template revisions. TODO: connect the editor and publishing workflow to those revisions, add a validated generation request, queued server jobs, provider output schema validation, pedagogical review, deterministic PDF rendering, job failure/retry states, private storage, short-lived signed downloads and retention/deletion. Generated material metadata must reference the exact template version. Payment or quota enforcement belongs on the backend.
 
 ## Public discovery, rooms, and rankings
 

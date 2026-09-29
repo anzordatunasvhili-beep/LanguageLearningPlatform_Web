@@ -1,111 +1,86 @@
 import { Link, useParams } from 'react-router';
-import { Badge, Card, EmptyState, Icon, ProgressBar } from '../../components/ui/index.jsx';
 import { useAuth } from '../auth/AuthProvider.jsx';
-import { achievementService } from '../../services/catalogService.js';
+import { playerService } from '../../services/platformService.js';
+import { Card, PageHeader, EmptyState, Badge } from '../../components/ui/index.jsx';
+import { useResource } from '../../hooks/useResource.js';
+import ResourceState from '../../components/ResourceState.jsx';
 import '../learning/catalog.css';
-
 export default function ProfilePage() {
   const { username } = useParams();
-  const { user, profile, isDemo } = useAuth();
-  const ownUsername = profile?.username;
-  if (username && username !== 'me' && username !== ownUsername)
-    return (
-      <EmptyState
-        icon="person_search"
-        title="Profile unavailable"
-        description="Public profile browsing is not connected yet. You can view your own profile from the navigation."
-      />
-    );
-  const displayName = profile?.display_name || user?.user_metadata?.display_name || 'Learner';
+  const { profile, user } = useAuth();
+  const isOwn = username === 'me' || username === profile?.username;
+  const resource = useResource(
+    async () => ({
+      person: isOwn ? profile : await playerService.profile(username),
+      player: isOwn ? await playerService.overview() : null,
+    }),
+    [username, user?.id, profile],
+  );
   return (
-    <div className="page-stack">
-      <Card className="profile-banner">
-        <span className="profile-initials" aria-hidden="true">
-          {displayName.slice(0, 2).toUpperCase()}
-        </span>
-        <div>
-          <p className="eyebrow">YOUR PLAYER IDENTITY</p>
-          <h1>{displayName}</h1>
-          {ownUsername && <p className="muted">@{ownUsername}</p>}
-          <div className="tag-row">
-            <Badge>{isDemo ? 'Sample explorer' : 'Learner'}</Badge>
-            <Link className="text-link" to="/app/avatar">
-              Meet your avatar <Icon name="arrow_forward" />
-            </Link>
-          </div>
-        </div>
-      </Card>
-      {isDemo ? (
-        <>
-          <div className="stat-grid">
-            <Card>
-              <p className="eyebrow">ACCOUNT LEVEL</p>
-              <p className="profile-stat-value">12</p>
-              <span className="muted">Sample progress</span>
-            </Card>
-            <Card>
-              <p className="eyebrow">TOTAL XP</p>
-              <p className="profile-stat-value">12,450</p>
-              <span className="muted">Across your journey</span>
-            </Card>
-            <Card>
-              <p className="eyebrow">DAY STREAK</p>
-              <p className="profile-stat-value">12 days</p>
-              <span className="muted">A little, every day</span>
-            </Card>
-          </div>
-          <div className="split-grid">
-            <Card className="profile-detail">
-              <div>
-                <p className="eyebrow">LANGUAGE JOURNEY</p>
-                <h2>Japanese</h2>
-                <p className="muted">A1 · Finding your voice</p>
-              </div>
-              <ProgressBar value={68} label="Sample Japanese course progress: 68 percent" />
-              <Link className="text-link" to="/app/learn">
-                Explore lessons <Icon name="arrow_forward" />
-              </Link>
-            </Card>
-            <Card className="profile-detail">
-              <div className="section-heading">
-                <h2>Little victories</h2>
-                <Link className="text-link" to="/app/achievements">
-                  View all
-                </Link>
-              </div>
-              {achievementService
-                .list()
-                .filter((item) => item.unlocked)
-                .map((item) => (
-                  <div className="catalog-flex" key={item.id}>
-                    <span className="catalog-emblem amber">
-                      <Icon name={item.icon} />
-                    </span>
-                    <div>
-                      <h3>{item.title}</h3>
-                      <p className="muted">{item.description}</p>
+    <ResourceState resource={resource}>
+      {({ person, player }) =>
+        person ? (
+          <div className="page-stack">
+            <PageHeader
+              eyebrow="PLAYER PROFILE"
+              title={person.display_name}
+              description={'@' + person.username}
+              action={
+                isOwn ? (
+                  <Link className="button button-secondary" to="/app/settings">
+                    Edit profile
+                  </Link>
+                ) : undefined
+              }
+            />
+            <div className="tag-row">
+              {person.country && <Badge>{person.country}</Badge>}
+              <Badge>{person.is_public ? 'Public profile' : 'Private profile'}</Badge>
+            </div>
+            {player ? (
+              <>
+                <div className="stat-grid">
+                  {[
+                    ['Account level', 1 + Math.floor(player.progress.total_xp / 1000)],
+                    ['Total XP', player.progress.total_xp],
+                    ['Day streak', player.progress.current_streak],
+                  ].map(([label, value]) => (
+                    <Card key={label}>
+                      <p className="eyebrow">{label}</p>
+                      <strong className="profile-stat-value">{value}</strong>
+                    </Card>
+                  ))}
+                </div>
+                <Card>
+                  <h2>Your languages</h2>
+                  {player.languages.map((l) => (
+                    <div className="list-row" key={l.language_id}>
+                      <strong>{l.language?.name}</strong>
+                      <span>{l.xp} XP</span>
                     </div>
-                  </div>
-                ))}
-            </Card>
+                  ))}
+                  {!player.languages.length && (
+                    <p className="muted">Complete a lesson to start your journey.</p>
+                  )}
+                  <Link className="text-link" to="/app/avatar">
+                    Customize your avatar
+                  </Link>
+                </Card>
+              </>
+            ) : (
+              <p className="muted">
+                Personal progress stays private. Public ranking entries are available in the
+                leaderboard.
+              </p>
+            )}
           </div>
-          <p className="catalog-disclaimer">
-            This demo profile uses sample statistics and achievements. Your account identity and
-            avatar are separate parts of your journey.
-          </p>
-        </>
-      ) : (
-        <Card>
+        ) : (
           <EmptyState
-            icon="auto_stories"
-            title="Your story starts here"
-            description="Account progression and public profile statistics will appear when connected to validated learning activity."
+            title="Profile unavailable"
+            description="This profile is private or does not exist."
           />
-          <Link className="button button-primary" to="/app/learn">
-            Explore sample lessons
-          </Link>
-        </Card>
-      )}
-    </div>
+        )
+      }
+    </ResourceState>
   );
 }

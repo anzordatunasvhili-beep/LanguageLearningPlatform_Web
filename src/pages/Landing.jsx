@@ -1,7 +1,6 @@
 import { Link } from 'react-router';
 import { Icon } from '../components/ui/index.jsx';
 import CharacterRenderer from '../features/characters/CharacterRenderer.jsx';
-import { characters } from '../data/characters.js';
 
 export default function Landing() {
   return (
@@ -23,7 +22,7 @@ export default function Landing() {
               Start your next chapter <Icon name="arrow_forward" />
             </Link>
             <Link className="text-link" to="/auth/login">
-              Explore the foundation
+              Sign in
             </Link>
           </div>
           <div className="landing-languages">
@@ -31,8 +30,7 @@ export default function Landing() {
               <i className="japan-dot" /> Japanese
             </span>
             <span>Español</span>
-            <span>Français</span>
-            <span>And a world ahead</span>
+            <span>Learn at your own pace</span>
           </div>
         </div>
         <div className="landing-art">
@@ -43,9 +41,9 @@ export default function Landing() {
             ADVENTURE / 01
           </span>
           <div className="landing-circle" />
-          <CharacterRenderer appearance={characters[0].appearance} name="Haruka" />
+          <CharacterRenderer name="Kotoba explorer" />
           <div className="landing-dialogue">
-            <span>HARUKA · TOKYO</span>
+            <span>YOUR NEXT CHAPTER</span>
             <strong>
               Every story starts
               <br />
@@ -81,7 +79,7 @@ export default function Landing() {
         <Link className="button button-lime" to="/auth/register">
           Let’s find out <Icon name="arrow_forward" />
         </Link>
-        <p className="small">Foundation preview · Sample lessons, characters, and progression</p>
+        <p className="small">Lessons, practice, and progress saved to your account.</p>
       </section>
     </div>
   );

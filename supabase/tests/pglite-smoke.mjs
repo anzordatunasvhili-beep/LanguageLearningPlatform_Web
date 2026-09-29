@@ -97,9 +97,12 @@ try {
     end;
     $$;
   `)
-  const testSql = (await readFile('supabase/tests/database/security.test.sql', 'utf8'))
-    .replace('create extension if not exists pgtap with schema extensions;', '')
-  const results = await db.exec(testSql)
+  const results = []
+  for (const testName of (await readdir('supabase/tests/database')).filter(name=>name.endsWith('.sql')).sort()) {
+    const testSql = (await readFile('supabase/tests/database/'+testName, 'utf8'))
+      .replace('create extension if not exists pgtap with schema extensions;', '')
+    results.push(...await db.exec(testSql))
+  }
   const assertions = results.flatMap((result) => result.rows).flatMap((row) => Object.values(row))
     .filter((value) => typeof value === 'string' && value.startsWith('ok - '))
   assertions.forEach((assertion) => console.log(assertion))

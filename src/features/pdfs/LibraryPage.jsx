@@ -1,66 +1,77 @@
 import { useState } from 'react';
-import { Badge, Button, Card, Modal, PageHeader } from '../../components/ui/index.jsx';
+import { Link, useNavigate } from 'react-router';
+import { Button, Card, PageHeader } from '../../components/ui/index.jsx';
 import { pdfService } from '../../services/catalogService.js';
+import { useResource } from '../../hooks/useResource.js';
+import ResourceState from '../../components/ResourceState.jsx';
 import '../learning/catalog.css';
-
 export default function LibraryPage() {
-  const [selected, setSelected] = useState(null);
+  const resource = useResource(
+    async () => ({
+      templates: await pdfService.listTemplates(),
+      materials: await pdfService.list(),
+    }),
+    [],
+  );
+  const [busy, setBusy] = useState(null),
+    [error, setError] = useState('');
+  const navigate = useNavigate();
+  async function generate(id) {
+    setBusy(id);
+    setError('');
+    try {
+      const result = await pdfService.generate(id);
+      navigate('/app/library/' + result.id);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="A QUIETER KIND OF PRACTICE"
+        eyebrow="OFFLINE PRACTICE"
         title="Your learning library."
-        description="Thoughtfully structured materials, for the moments you want to slow down and go deeper."
-        action={<Badge>Sample templates</Badge>}
+        description="Generate a workbook from published exercises, then print it or save it as a PDF."
       />
-      <div className="catalog-grid">
-        {pdfService.listTemplates().map((template) => (
-          <Card className="library-card" key={template.id}>
-            <div className="library-sheet">
-              {template.name}
-              <small>
-                {template.language.toUpperCase()} · {template.level}
-              </small>
-            </div>
-            <h2>{template.name}</h2>
-            <p className="muted">
-              {template.sections.length} sections · {template.questionCount} questions planned
-            </p>
-            <div className="tag-row">
-              <Badge>{template.language}</Badge>
-              <Badge>{template.level}</Badge>
-            </div>
-            <Button variant="secondary" onClick={() => setSelected(template)}>
-              Preview structure
-            </Button>
-          </Card>
-        ))}
-      </div>
-      <p className="catalog-disclaimer">
-        These previews show educational template structures. AI generation and downloadable PDFs are
-        not connected yet.
-      </p>
-      <Modal
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        title={selected?.name || 'Template preview'}
-      >
-        {selected && (
-          <div className="page-stack">
-            <Badge>Structure preview · No generated content</Badge>
-            <p>{selected.instructions}</p>
-            <ol className="catalog-list">
-              {selected.sections.map((section) => (
-                <li key={section}>{section}</li>
+      {error && <p role="alert">{error}</p>}
+      <ResourceState resource={resource}>
+        {({ templates, materials }) => (
+          <>
+            <div className="catalog-grid">
+              {templates.map((template) => (
+                <Card key={template.id}>
+                  <h2>{template.name}</h2>
+                  <p>
+                    {template.language?.name} · {template.level}
+                  </p>
+                  <p>{template.generation_rules.instructions}</p>
+                  <Button disabled={Boolean(busy)} onClick={() => generate(template.id)}>
+                    {busy === template.id ? 'Generating…' : 'Generate workbook'}
+                  </Button>
+                </Card>
               ))}
-            </ol>
-            <p className="muted">
-              Designed for {selected.questionCount} questions at {selected.level} level. A future
-              generation service will fill these sections with reviewed learning content.
-            </p>
-          </div>
+            </div>
+            {!templates.length && <Card>No published workbook templates yet.</Card>}
+            <h2>Your saved workbooks</h2>
+            {materials.length ? (
+              materials.map((m) => (
+                <Card key={m.id}>
+                  <Link className="text-link" to={'/app/library/' + m.id}>
+                    {m.title}
+                  </Link>
+                  <p className="muted">
+                    {new Date(m.created_at).toLocaleString()} · {m.status}
+                  </p>
+                </Card>
+              ))
+            ) : (
+              <p>Generate your first workbook to start your library.</p>
+            )}
+          </>
         )}
-      </Modal>
+      </ResourceState>
     </div>
   );
 }

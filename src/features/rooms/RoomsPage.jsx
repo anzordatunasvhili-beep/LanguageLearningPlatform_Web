@@ -1,71 +1,188 @@
-import { useState } from 'react';
-import { Badge, Button, Card, Icon, Modal, PageHeader } from '../../components/ui/index.jsx';
+import { useEffect, useRef, useState } from 'react';
+import { Card, Button, PageHeader, Badge, EmptyState } from '../../components/ui/index.jsx';
 import { roomService } from '../../services/catalogService.js';
+import { useResource } from '../../hooks/useResource.js';
+import ResourceState from '../../components/ResourceState.jsx';
 import '../learning/catalog.css';
-
+function RoomChat({ room, onClose }) {
+  const [messages, setMessages] = useState([]),
+    [body, setBody] = useState(''),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('');
+  const active = useRef(true);
+  useEffect(() => {
+    active.current = true;
+    let request = 0;
+    const load = async () => {
+      const revision = ++request;
+      try {
+        const next = await roomService.feed(room.id);
+        if (active.current && revision === request) {
+          setMessages(next);
+          setError('');
+        }
+      } catch (e) {
+        if (active.current) setError(e.message);
+      }
+    };
+    load();
+    const timer = setInterval(() => {
+      if (!document.hidden) load();
+    }, 8000);
+    return () => {
+      active.current = false;
+      request++;
+      clearInterval(timer);
+    };
+  }, [room.id]);
+  async function send(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const next = await roomService.send(room.id, body);
+      if (active.current) {
+        setMessages(next);
+        setBody('');
+      }
+    } catch (e) {
+      if (active.current) setError(e.message);
+    } finally {
+      if (active.current) setBusy(false);
+    }
+  }
+  return (
+    <Card className="page-stack">
+      <div className="section-heading">
+        <h2>{room.name}</h2>
+        <Button variant="secondary" onClick={onClose}>
+          Close chat
+        </Button>
+      </div>
+      <div className="room-chat-log" aria-label="Room messages">
+        {messages.map((m) => (
+          <div className={'chat-message ' + (m.is_mine ? 'is-mine' : '')} key={m.id}>
+            <strong>{m.display_name}</strong>
+            <p>{m.body}</p>
+            <small>{new Date(m.created_at).toLocaleTimeString()}</small>
+          </div>
+        ))}
+        {!messages.length && <p className="muted">Start the conversation.</p>}
+      </div>
+      {error && (
+        <p role="alert" className="notice notice-error">
+          {error}
+        </p>
+      )}
+      <form className="reply-form" onSubmit={send}>
+        <label className="sr-only" htmlFor="room-message">
+          Message
+        </label>
+        <input
+          id="room-message"
+          maxLength={2000}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Write a message…"
+          required
+        />
+        <Button type="submit" disabled={busy || !body.trim()}>
+          {busy ? 'Sending…' : 'Send'}
+        </Button>
+      </form>
+      <p className="small muted">Messages update every eight seconds while this page is open.</p>
+    </Card>
+  );
+}
 export default function RoomsPage() {
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(null),
+    [busy, setBusy] = useState(''),
+    [error, setError] = useState('');
+  const resource = useResource(
+    async () => ({ rooms: await roomService.list(), members: await roomService.memberships() }),
+    [],
+  );
+  async function membership(room, joined) {
+    setBusy(room.id);
+    setError('');
+    try {
+      if (joined) {
+        await roomService.leave(room.id);
+        setSelected(null);
+      } else {
+        await roomService.join(room.id);
+        setSelected(room);
+      }
+      resource.reload();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy('');
+    }
+  }
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="BETTER WITH COMPANY"
-        title="Find your kind of conversation."
-        description="A preview of the spaces where our learning community will come together."
-        action={<Badge>Sample rooms</Badge>}
+        eyebrow="LEARN IN GOOD COMPANY"
+        title="Find your study circle."
+        description="Join a room and practice with other learners."
       />
-      <div className="catalog-grid">
-        {roomService.list().map((room) => (
-          <Card key={room.id} className="room-card">
-            <span className="catalog-emblem sage">
-              <Icon name={room.icon} />
-            </span>
-            <Badge>{room.type}</Badge>
-            <h2>{room.name}</h2>
-            <p className="muted">{room.description}</p>
-            <p className="catalog-meta">
-              {room.language} · {room.level}
-            </p>
-            <Button variant="secondary" onClick={() => setSelected(room)}>
-              Explore room
-            </Button>
-          </Card>
-        ))}
-      </div>
-      <div className="notice">
-        <Icon name="forum" />
-        <p>
-          Community rooms are a future feature. These sample spaces have no live members, chat,
-          voice, or video.
+      {error && (
+        <p role="alert" className="notice notice-error">
+          {error}
         </p>
-      </div>
-      <Modal
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        title={selected?.name || 'Room details'}
-      >
-        {selected && (
-          <div className="page-stack">
-            <Badge>Planned community space</Badge>
-            <p>{selected.description}</p>
-            <p>
-              <strong>Language:</strong> {selected.language}
-              <br />
-              <strong>Suggested level:</strong> {selected.level}
-            </p>
-            <div>
-              <h3>A welcoming room for everyone</h3>
-              <ul className="catalog-list">
-                <li>Be patient with learners and invite everyone into the conversation.</li>
-                <li>Ask before correcting and keep feedback kind.</li>
-                <li>Keep personal contact details private.</li>
-              </ul>
+      )}
+      <ResourceState resource={resource}>
+        {({ rooms, members }) => (
+          <>
+            <div className="catalog-grid">
+              {rooms.map((room) => {
+                const joined = members.some((m) => m.room_id === room.id);
+                const textChat = ['text', 'study', 'game'].includes(room.kind);
+                return (
+                  <Card className="page-stack" key={room.id}>
+                    <h2>{room.name}</h2>
+                    <Badge>
+                      {room.language?.name || 'All languages'} ·{' '}
+                      {room.required_level || 'All levels'}
+                    </Badge>
+                    <p className="muted">
+                      {room.kind} room · Capacity {room.capacity}
+                    </p>
+                    {textChat ? (
+                      <div className="filter-row">
+                        <Button
+                          disabled={busy === room.id}
+                          onClick={() => membership(room, joined)}
+                        >
+                          {joined ? 'Leave room' : 'Join room'}
+                        </Button>
+                        {joined && (
+                          <Button variant="secondary" onClick={() => setSelected(room)}>
+                            Open chat
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="muted">
+                        This room requires a voice or event integration that has not been
+                        configured.
+                      </p>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
-            <p className="muted">
-              Joining will become available when moderated community rooms launch.
-            </p>
-          </div>
+            {!rooms.length && (
+              <EmptyState
+                title="No rooms published yet"
+                description="Administrators can create text or study rooms in the content studio."
+              />
+            )}
+          </>
         )}
-      </Modal>
+      </ResourceState>
+      {selected && <RoomChat key={selected.id} room={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
