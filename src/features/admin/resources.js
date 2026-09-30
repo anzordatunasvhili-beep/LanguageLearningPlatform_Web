@@ -1,3 +1,4 @@
+import { createCharacter } from '../characters/portrait/data/character.js';
 const text = (key, label, extra = {}) => ({ key, label, type: 'text', ...extra });
 const number = (key, label, extra = {}) => ({ key, label, type: 'number', ...extra });
 const select = (key, label, options, extra = {}) => ({
@@ -152,7 +153,7 @@ export const adminResources = {
       json('presentation', 'Personality and appearance', {
         occupation: 'Conversation partner',
         personality: ['friendly'],
-        appearance: { skin: '#deb99e', hair: '#343735', outfit: '#747e69', style: 'bob' },
+        portrait: createCharacter(),
       }),
       status,
     ],

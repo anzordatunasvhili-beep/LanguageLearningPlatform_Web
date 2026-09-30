@@ -1,0 +1,190 @@
+.rig-workshop {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.rig-stage-panel {
+  position: sticky;
+  top: 20px;
+  background: #ebe3d3;
+  border: 1px solid #ddd8c8;
+  border-radius: 24px;
+  overflow: hidden;
+}
+.rig-stage {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+.rig-view-buttons,
+.rig-button-row {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.rig-view-buttons {
+  padding: 18px;
+}
+.rig-workshop button {
+  border: 1px solid #d8ddcd;
+  padding: 8px 11px;
+  border-radius: 9px;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.rig-workshop button[aria-pressed='true'] {
+  background: #e5eddc;
+  border-color: #6b805c;
+}
+.rig-workshop button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.rig-help,
+.rig-coordinate {
+  display: block;
+  margin: 12px 20px;
+  font-size: 12px;
+  color: #626650;
+}
+.rig-coordinate {
+  min-height: 20px;
+  font-family: monospace;
+}
+.rig-handles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.rig-workshop .rig-vertex {
+  position: absolute;
+  padding: 0;
+  width: 15px;
+  height: 15px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid #147785;
+  background: #f9f3df;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  z-index: 2;
+}
+.rig-vertex span {
+  position: absolute;
+  top: 12px;
+  left: 8px;
+  background: #f8f6eccc;
+  padding: 1px 2px;
+  border-radius: 3px;
+  font: 10px monospace;
+  color: #135461;
+  pointer-events: none;
+}
+.rig-vertex:focus-visible {
+  outline: 3px solid #bc6b3f;
+  outline-offset: 3px;
+}
+.rig-controls {
+  padding: 24px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid #e3e5dc;
+  min-width: 0;
+}
+.rig-controls h2 {
+  margin-top: 0;
+}
+.rig-controls fieldset {
+  border: 0;
+  padding: 0;
+  margin: 18px 0;
+  min-width: 0;
+}
+.rig-controls legend {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 9px;
+}
+.rig-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 13px 0;
+  font-size: 13px;
+}
+.rig-field input:not([type='range']),
+.rig-field select {
+  width: 100%;
+  border: 1px solid #dce0d4;
+  border-radius: 8px;
+  padding: 8px;
+  background: white;
+  font: inherit;
+}
+.rig-controls input[type='range'],
+.rig-controls input[type='checkbox'] {
+  accent-color: #526a43;
+}
+.rig-checks,
+.rig-layer-toggles {
+  display: grid;
+  gap: 10px;
+  margin: 15px 0;
+  font-size: 12px;
+}
+.rig-layer-toggles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.rig-checks label,
+.rig-layer-toggles label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.rig-controls summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 20px;
+}
+.workshop-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 24px 0;
+}
+.workshop-tabs button {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 1px solid #d8decb;
+  background: white;
+  font: inherit;
+  cursor: pointer;
+}
+.workshop-tabs button[aria-pressed='true'] {
+  background: #52664a;
+  color: white;
+}
+@media (max-width: 850px) {
+  .rig-workshop {
+    grid-template-columns: 1fr;
+  }
+  .rig-stage-panel {
+    position: relative;
+    top: auto;
+    max-width: 600px;
+    width: 100%;
+    margin: auto;
+  }
+}
+@media (max-width: 420px) {
+  .rig-controls {
+    padding: 18px;
+  }
+  .rig-layer-toggles {
+    grid-template-columns: 1fr;
+  }
+}

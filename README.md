@@ -2,7 +2,7 @@
 
 React/Vite language learning with Supabase accounts, published content, server-checked practice, saved progress, avatar equipment, community chat, and a content administration panel.
 
-**Existing project: follow [Live setup](docs/LIVE_SETUP.md) to apply the two new SQL updates and activate AI.** Changing the public frontend key alone does not install database functions or deploy server code.
+**Existing project: follow [Live setup](docs/LIVE_SETUP.md) to apply the SQL updates and activate AI.** Changing the public frontend key alone does not install database functions or deploy server code.
 
 ## Run locally
 
@@ -38,7 +38,7 @@ npm run dev
 | Progress | Server-calculated XP, activity streaks, daily minutes, achievements and daily/weekly quests |
 | Games | Browser practice challenges with saved, server-checked scores and daily XP limits |
 | Profiles/settings | Saved identity, privacy, learning language, timezone and daily target |
-| Avatars | Account equipment loading/saving, free/owned asset checks, JSON export, built-in 2D/3D presentation |
+| Avatars | Modular painted PNG portraits, interchangeable features, expressions, color controls, JSON import/export and account saving; legacy equipment is preserved |
 | Leaderboards | Rankings from actual XP events, public-profile and explicit opt-in required |
 | Characters/AI | Published characters/scenarios, private saved chat, OpenAI or Gemini Edge adapter; requires deployment and provider secrets |
 | Library | Saved workbooks from published exercises; print or save PDF using the browser |
@@ -51,6 +51,8 @@ The application does not import the old hard-coded catalog or player fixtures. E
 Current games share the practice challenge engine; full standalone/RPG games are separate work. Voice rooms, payments/booking, production character models, native mobile/Godot clients, and an accredited proficiency assessment are not implemented. Workbooks use published course content rather than AI-generated lessons. AI replies are not proficiency grades and do not award XP.
 
 ## Administration
+
+Try the [modular portrait workshop](docs/MODULAR_PORTRAITS.md) at `/character-lab`. Account portrait saving at `/app/avatar` requires `20260930000100_modular_portraits.sql`. The 28 generated layers share a registered 1024-square canvas; no new AI images are generated when editing a character.
 
 Sign in with an account provisioned in `private.user_roles`, then open `/admin`. [Live setup](docs/LIVE_SETUP.md) includes the SQL to grant your own account administrator access. Publish a complete course → unit → lesson → exercise hierarchy. Answers are saved separately from public exercise content.
 

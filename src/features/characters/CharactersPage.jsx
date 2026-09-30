@@ -25,7 +25,10 @@ export default function CharactersPage() {
                   style={{ '--character-color': c.presentation?.color || '#dce0d5' }}
                 >
                   <div className="character-card-art">
-                    <CharacterRenderer name={c.name} appearance={c.presentation?.appearance} />
+                    <CharacterRenderer
+                      name={c.name}
+                      character={c}
+                    />
                     <span className="character-location">
                       {[c.city, c.country].filter(Boolean).join(', ')}
                     </span>

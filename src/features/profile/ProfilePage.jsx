@@ -4,21 +4,24 @@ import { playerService } from '../../services/platformService.js';
 import { Card, PageHeader, EmptyState, Badge } from '../../components/ui/index.jsx';
 import { useResource } from '../../hooks/useResource.js';
 import ResourceState from '../../components/ResourceState.jsx';
+import CharacterRenderer from '../characters/CharacterRenderer.jsx';
+import { portraitRepository } from '../../services/portraitRepository.js';
 import '../learning/catalog.css';
 export default function ProfilePage() {
   const { username } = useParams();
   const { profile, user } = useAuth();
   const isOwn = username === 'me' || username === profile?.username;
-  const resource = useResource(
-    async () => ({
-      person: isOwn ? profile : await playerService.profile(username),
+  const resource = useResource(async () => {
+    const person = isOwn ? profile : await playerService.profile(username);
+    return {
+      person,
       player: isOwn ? await playerService.overview() : null,
-    }),
-    [username, user?.id, profile],
-  );
+      portrait: person ? await portraitRepository.load(person.id) : null,
+    };
+  }, [username, user?.id, profile]);
   return (
     <ResourceState resource={resource}>
-      {({ person, player }) =>
+      {({ person, player, portrait }) =>
         person ? (
           <div className="page-stack">
             <PageHeader
@@ -34,6 +37,13 @@ export default function ProfilePage() {
               }
             />
             <div className="tag-row">
+              {portrait?.saved && (
+                <CharacterRenderer
+                  definition={portrait.definition}
+                  name={person.display_name}
+                  className="profile-portrait"
+                />
+              )}
               {person.country && <Badge>{person.country}</Badge>}
               <Badge>{person.is_public ? 'Public profile' : 'Private profile'}</Badge>
             </div>

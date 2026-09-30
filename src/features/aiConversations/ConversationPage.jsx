@@ -5,6 +5,7 @@ import { aiService } from '../../services/aiService.js';
 import { Button, Card, PageHeader } from '../../components/ui/index.jsx';
 import { useResource } from '../../hooks/useResource.js';
 import ResourceState from '../../components/ResourceState.jsx';
+import CharacterRenderer from '../characters/CharacterRenderer.jsx';
 function Conversation({ character, scenario }) {
   const [sessionId, setSessionId] = useState(null),
     [messages, setMessages] = useState([]),
@@ -49,6 +50,19 @@ function Conversation({ character, scenario }) {
         title={scenario.title}
         description={scenario.objective}
       />
+      <Card className="conversation-portrait-card">
+        <CharacterRenderer
+          character={character}
+          expression={scenario.scene?.emotion || 'neutral'}
+        />
+        <div>
+          <h2>{character.name}</h2>
+          <p>{character.presentation?.occupation || character.biography}</p>
+          <p className="muted">
+            {busy ? 'Listening and preparing a reply…' : 'Ready to practice with you.'}
+          </p>
+        </div>
+      </Card>
       <Card>
         {!sessionId ? (
           <>

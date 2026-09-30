@@ -1,0 +1,17 @@
+.character-card-art,
+.character-intro-art {
+  background: #e9e3d2;
+}
+.character-card-art > .modular-portrait {
+  width: 100%;
+  height: 100%;
+}
+.character-intro-art > .modular-portrait {
+  width: 100%;
+  max-width: 640px;
+  margin: auto;
+}
+.character-intro-art {
+  display: flex;
+  align-items: center;
+}

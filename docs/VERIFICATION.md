@@ -1,5 +1,17 @@
 # Verification — live data update, 29 September 2026
 
+## Modular portrait update — 30 September 2026
+
+- Production build passed. Node suite: 23 tests passed. SQL smoke suite: 109 assertions passed across all seven migrations, including owner-only portrait writes, private reads and public-profile visibility.
+- `tests/browser-portraits.mjs` passed: 384 raster compositions (64 independent feature combinations × three emotions × speaking on/off), 1440/820/390/320 layouts, JSON import/export and invalid import handling, browser draft persistence, account save/reload, saved profile portrait and consistent identity between catalog introduction and conversation.
+- All 28 shipping layer PNGs have actual transparency and a common 1024 × 1024 canvas. Contact sheets were visually reviewed for registration and palette changes. The master reference and every part were generated with built-in imagegen, then registered once per asset.
+- Local artifacts: `.local/screenshots/portrait-combinations.png`, `portrait-colors.png`, and `portrait-390.png`. The shared artist guide is `public/characters/painted-v1/master-template.png`. Exact prompts and implementation notes: [Modular portraits](MODULAR_PORTRAITS.md).
+- Browser database tests use isolated PGlite with explicit Auth/PostgREST doubles. Hosted Supabase migration and real AI deployment were not performed. Runtime portrait rendering makes no image-generation requests. Audio lip sync and user-authored AI personas are outside this portrait milestone.
+
+Repeat with Vite dev running on port 5191: `node tests/browser-portraits.mjs` (or set `PORTRAIT_TEST_URL`). Optional QA dependencies remain under `.tools/qa` and `.tools/db-verify`.
+
+## Earlier live-platform checks
+
 | Check | Result | Scope |
 | --- | --- | --- |
 | Production build | Passed | All React routes and lazy bundles compiled |
@@ -29,4 +41,4 @@ The AI endpoint tests transpile the actual TypeScript handler and supply isolate
 
 Run native `supabase test db` and `supabase db lint --local` with Supabase CLI/Docker. These were unavailable here. Verify hosted email verification/recovery, OAuth configuration, the actual PostgREST relations, both SQL updates, and a configured AI provider on the intended deployment.
 
-Three.js remains a lazy-loaded ~902 kB minified chunk (~244 kB gzip), causing the existing bundle-size warning. Character visuals remain built-in SVG/geometric representations. Full standalone games, voice/video, bookings/payments, native clients and production avatar asset delivery are not implemented by this update.
+The former SVG/geometric characters have been replaced with modular generated raster portraits. The geometric Three.js viewer and its large lazy chunk are no longer included in the build. The rounded landing-page redesign retains its generated full-body illustrations and was checked at 1440, 820, 390 and 320 pixels. Full standalone games, voice/video, bookings/payments, native clients and custom 3D avatar delivery are not implemented. See [art direction and prompts](ART_DIRECTION.md).

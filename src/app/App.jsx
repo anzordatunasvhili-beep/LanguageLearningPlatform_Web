@@ -22,6 +22,7 @@ const Characters = lazy(() => import('../features/characters/CharactersPage.jsx'
 const Character = lazy(() => import('../features/characters/CharacterDetailPage.jsx'));
 const Conversation = lazy(() => import('../features/aiConversations/ConversationPage.jsx'));
 const Avatar = lazy(() => import('../features/avatar/AvatarPage.jsx'));
+const PortraitLab = lazy(() => import('../features/characters/portrait/PortraitLabPage.jsx'));
 const Opportunities = lazy(() => import('../features/opportunities/OpportunitiesPage.jsx'));
 const Rooms = lazy(() => import('../features/rooms/RoomsPage.jsx'));
 const Profile = lazy(() => import('../features/profile/ProfilePage.jsx'));
@@ -49,6 +50,7 @@ export default function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route index element={<Landing />} />
+          <Route path="character-lab" element={<PortraitLab />} />
           <Route
             path="games"
             element={

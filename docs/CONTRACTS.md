@@ -31,7 +31,13 @@ The browser games currently share the practice challenge engine. Independent gam
 
 `avatarRepository` loads the published catalog, entitlements, primary avatar, and equipment. `save_avatar` resolves stable keys/version numbers and checks ownership, free/unlocked status, model compatibility, slot compatibility, and appearance options in one transaction. It returns the persistent avatar UUID. A draft starts with built-in colors; it becomes account data only on successful save.
 
-The web renderer currently supports the built-in body/hair/top styles and tint palette. Database catalog support is broader than the renderer; uploading another manifest does not automatically provide a new visual implementation. Production models, animations, Godot/native manifest resolution and expanded inventory UI remain future work.
+This equipment contract remains available for existing data and future inventory integrations. The active avatar editor now uses the independent painted portrait contract below; it does not delete or overwrite legacy equipment.
+
+## Painted portrait definition v1
+
+`user_portraits.definition` stores `{schemaVersion, template, parts, colors}`. `save_portrait(p_definition)` runs with the caller's permissions and saves only `auth.uid()`; RLS protects writes and private reads. Signed-in viewers can read a portrait only when its profile is public or they own it. Transient expressions and speaking state are not part of saved identity.
+
+`CharacterRenderer` resolves catalog `presentation.portrait` (or adapts legacy appearance metadata), then delegates to the same raster compositor used by the account editor and profile. All 28 transparent PNG layers have the same registered 1024-square canvas. See [modular portraits](MODULAR_PORTRAITS.md) for the schema, anchors, raster recoloring and extension guide.
 
 ## AI conversations
 

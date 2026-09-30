@@ -6,10 +6,11 @@ If you already ran the four migrations dated `20260928`, run these files in **Su
 
 1. [20260929000100_live_platform.sql](../supabase/migrations/20260929000100_live_platform.sql)
 2. [20260929000200_live_conversations.sql](../supabase/migrations/20260929000200_live_conversations.sql)
+3. [20260930000100_modular_portraits.sql](../supabase/migrations/20260930000100_modular_portraits.sql)
 
 Each file is a transaction. Run each once. Do not rerun the old migrations or reset your database. If a file reports an error, copy the error text; do not skip to the next file. Existing accounts and catalog records are retained.
 
-For a fresh project, run all six files in `supabase/migrations` in filename order. Do not run the development seed on a new production project. Create your real content through admin.
+For a fresh project, run all seven files in `supabase/migrations` in filename order. If the first two updates are already applied, run only the new portrait migration. Do not run the development seed on a new production project. Create your real content through admin.
 
 These updates add private practice snapshots, trusted grading/rewards, room chat, workbook generation, avatar saving, rankings, admin answer editing, and private AI messages with server-only request reservations.
 

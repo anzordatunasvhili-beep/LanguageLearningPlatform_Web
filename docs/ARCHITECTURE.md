@@ -1,5 +1,7 @@
 # Language-learning platform: foundation plan
 
+30 September portrait update: the active character system is now a layered raster portrait renderer with separately generated PNG parts, fixed landmarks, expression states and independent account persistence. See [Modular portraits](MODULAR_PORTRAITS.md). The roadmap below is historical; it does not describe the current portrait implementation.
+
 Original planning document, 28 September 2026. Updated live implementation status, 29 September: catalogs, practice/grading/progress, profiles/settings, avatar persistence, opt-in rankings, text rooms, workbooks, and admin publishing now use Supabase. AI has a deployable authenticated Edge adapter. See [Contracts](CONTRACTS.md), [Live setup](LIVE_SETUP.md), and [Verification](VERIFICATION.md) for the current behavior; the phase table below retains the original roadmap.
 
 ## Reference and design direction

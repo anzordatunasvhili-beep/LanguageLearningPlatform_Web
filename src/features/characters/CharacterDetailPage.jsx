@@ -20,7 +20,10 @@ export default function CharacterDetailPage() {
               style={{ '--character-color': c.presentation?.color || '#dce0d5' }}
             >
               <div className="character-intro-art">
-                <CharacterRenderer name={c.name} appearance={c.presentation?.appearance} />
+                <CharacterRenderer
+                  name={c.name}
+                  character={c}
+                />
               </div>
               <div className="character-intro-copy">
                 <Badge>{c.language?.name}</Badge>

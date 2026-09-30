@@ -1,0 +1,835 @@
+{
+  "template": "frontal-painted-v1",
+  "canvas": [
+    1024,
+    1024
+  ],
+  "assets": {
+    "head-a": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            220,
+            30,
+            815,
+            1181
+          ],
+          "target": [
+            295,
+            155,
+            434,
+            615
+          ]
+        }
+      ],
+      "transparent": 820947
+    },
+    "head-b": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            236,
+            33,
+            784,
+            1151
+          ],
+          "target": [
+            282,
+            155,
+            460,
+            615
+          ]
+        }
+      ],
+      "transparent": 854145
+    },
+    "nose-a": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            423,
+            262,
+            418,
+            712
+          ],
+          "target": [
+            461,
+            429,
+            102,
+            174
+          ]
+        }
+      ],
+      "transparent": 1331986
+    },
+    "eyes-a-neutral": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            53,
+            487,
+            525,
+            325
+          ],
+          "target": [
+            342,
+            422,
+            152,
+            90
+          ]
+        },
+        {
+          "source": [
+            680,
+            484,
+            531,
+            331
+          ],
+          "target": [
+            530,
+            422,
+            152,
+            90
+          ]
+        }
+      ],
+      "transparent": 1320448
+    },
+    "nose-b": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            383,
+            257,
+            501,
+            719
+          ],
+          "target": [
+            453,
+            429,
+            118,
+            174
+          ]
+        }
+      ],
+      "transparent": 1324081
+    },
+    "ears-a": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            115,
+            411,
+            251,
+            464
+          ],
+          "target": [
+            277,
+            442,
+            64,
+            139
+          ]
+        },
+        {
+          "source": [
+            887,
+            410,
+            251,
+            464
+          ],
+          "target": [
+            683,
+            442,
+            64,
+            139
+          ]
+        }
+      ],
+      "transparent": 1406077
+    },
+    "neck-a": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            132,
+            263,
+            990,
+            790
+          ],
+          "target": [
+            362,
+            690,
+            300,
+            302
+          ]
+        }
+      ],
+      "transparent": 1009391
+    },
+    "hair-a-back": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            142,
+            14,
+            973,
+            816
+          ],
+          "target": [
+            270,
+            112,
+            484,
+            380
+          ]
+        }
+      ],
+      "transparent": 1268142
+    },
+    "hair-a-front": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            107,
+            158,
+            1048,
+            803
+          ],
+          "target": [
+            265,
+            90,
+            494,
+            380
+          ]
+        }
+      ],
+      "transparent": 1152356
+    },
+    "hair-b-back": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            72,
+            31,
+            1138,
+            1041
+          ],
+          "target": [
+            235,
+            115,
+            554,
+            650
+          ]
+        }
+      ],
+      "transparent": 986817
+    },
+    "hair-b-front": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            60,
+            28,
+            1132,
+            1085
+          ],
+          "target": [
+            210,
+            105,
+            604,
+            690
+          ]
+        }
+      ],
+      "transparent": 957234
+    },
+    "brows-a-neutral": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            98,
+            523,
+            466,
+            141
+          ],
+          "target": [
+            347,
+            393,
+            142,
+            31
+          ]
+        },
+        {
+          "source": [
+            692,
+            522,
+            465,
+            142
+          ],
+          "target": [
+            535,
+            393,
+            142,
+            31
+          ]
+        }
+      ],
+      "transparent": 1499936
+    },
+    "eyes-a-happy": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            68,
+            505,
+            514,
+            284
+          ],
+          "target": [
+            342,
+            422,
+            152,
+            90
+          ]
+        },
+        {
+          "source": [
+            702,
+            506,
+            502,
+            279
+          ],
+          "target": [
+            530,
+            422,
+            152,
+            90
+          ]
+        }
+      ],
+      "transparent": 1344867
+    },
+    "brows-a-happy": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            81,
+            532,
+            480,
+            150
+          ],
+          "target": [
+            347,
+            387,
+            142,
+            31
+          ]
+        },
+        {
+          "source": [
+            692,
+            531,
+            481,
+            150
+          ],
+          "target": [
+            535,
+            387,
+            142,
+            31
+          ]
+        }
+      ],
+      "transparent": 1500858
+    },
+    "eyes-a-serious": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            42,
+            467,
+            550,
+            349
+          ],
+          "target": [
+            342,
+            422,
+            152,
+            90
+          ]
+        },
+        {
+          "source": [
+            682,
+            462,
+            535,
+            351
+          ],
+          "target": [
+            530,
+            422,
+            152,
+            90
+          ]
+        }
+      ],
+      "transparent": 1309853
+    },
+    "brows-a-serious": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            53,
+            541,
+            541,
+            170
+          ],
+          "target": [
+            347,
+            393,
+            142,
+            37
+          ]
+        },
+        {
+          "source": [
+            660,
+            540,
+            546,
+            171
+          ],
+          "target": [
+            535,
+            393,
+            142,
+            37
+          ]
+        }
+      ],
+      "transparent": 1479980
+    },
+    "eyes-b-neutral": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            42,
+            496,
+            528,
+            283
+          ],
+          "target": [
+            342,
+            422,
+            152,
+            90
+          ]
+        },
+        {
+          "source": [
+            690,
+            494,
+            522,
+            286
+          ],
+          "target": [
+            530,
+            422,
+            152,
+            90
+          ]
+        }
+      ],
+      "transparent": 1342668
+    },
+    "brows-b-neutral": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            52,
+            531,
+            506,
+            155
+          ],
+          "target": [
+            347,
+            393,
+            142,
+            31
+          ]
+        },
+        {
+          "source": [
+            705,
+            535,
+            496,
+            152
+          ],
+          "target": [
+            535,
+            393,
+            142,
+            31
+          ]
+        }
+      ],
+      "transparent": 1494376
+    },
+    "eyes-b-happy": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            72,
+            505,
+            510,
+            283
+          ],
+          "target": [
+            342,
+            422,
+            152,
+            90
+          ]
+        },
+        {
+          "source": [
+            688,
+            513,
+            499,
+            275
+          ],
+          "target": [
+            530,
+            422,
+            152,
+            90
+          ]
+        }
+      ],
+      "transparent": 1348637
+    },
+    "brows-b-happy": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            96,
+            532,
+            495,
+            156
+          ],
+          "target": [
+            347,
+            387,
+            142,
+            31
+          ]
+        },
+        {
+          "source": [
+            682,
+            526,
+            495,
+            162
+          ],
+          "target": [
+            535,
+            387,
+            142,
+            31
+          ]
+        }
+      ],
+      "transparent": 1492618
+    },
+    "eyes-b-serious": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            40,
+            476,
+            564,
+            341
+          ],
+          "target": [
+            342,
+            422,
+            152,
+            90
+          ]
+        },
+        {
+          "source": [
+            660,
+            478,
+            561,
+            336
+          ],
+          "target": [
+            530,
+            422,
+            152,
+            90
+          ]
+        }
+      ],
+      "transparent": 1297190
+    },
+    "brows-b-serious": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            73,
+            536,
+            494,
+            150
+          ],
+          "target": [
+            347,
+            393,
+            142,
+            37
+          ]
+        },
+        {
+          "source": [
+            690,
+            530,
+            502,
+            155
+          ],
+          "target": [
+            535,
+            393,
+            142,
+            37
+          ]
+        }
+      ],
+      "transparent": 1497610
+    },
+    "mouth-a-neutral": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            204,
+            433,
+            847,
+            439
+          ],
+          "target": [
+            442,
+            632,
+            140,
+            54
+          ]
+        }
+      ],
+      "transparent": 1282826
+    },
+    "mouth-a-smile": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            182,
+            390,
+            886,
+            514
+          ],
+          "target": [
+            442,
+            632,
+            140,
+            56
+          ]
+        }
+      ],
+      "transparent": 1230420
+    },
+    "mouth-a-speaking": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            232,
+            395,
+            797,
+            518
+          ],
+          "target": [
+            442,
+            632,
+            140,
+            74
+          ]
+        }
+      ],
+      "transparent": 1259687
+    },
+    "mouth-b-neutral": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            251,
+            485,
+            751,
+            370
+          ],
+          "target": [
+            439,
+            632,
+            146,
+            44
+          ]
+        }
+      ],
+      "transparent": 1367890
+    },
+    "mouth-b-smile": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            214,
+            433,
+            823,
+            413
+          ],
+          "target": [
+            439,
+            632,
+            146,
+            56
+          ]
+        }
+      ],
+      "transparent": 1313755
+    },
+    "mouth-b-speaking": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "regions": [
+        {
+          "source": [
+            272,
+            475,
+            704,
+            445
+          ],
+          "target": [
+            439,
+            632,
+            146,
+            74
+          ]
+        }
+      ],
+      "transparent": 1341835
+    }
+  }
+}
